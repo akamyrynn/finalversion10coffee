@@ -1,0 +1,131 @@
+.section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3rem;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+  background-color: var(--base-600);
+}
+
+.avatars {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: max-content;
+  height: 100px;
+}
+
+.avatar {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  padding: 5px;
+  cursor: pointer;
+  filter: saturate(0);
+  will-change: width, height;
+}
+
+.avatar img {
+  border-radius: 0.35rem;
+}
+
+.names {
+  position: relative;
+  width: 100%;
+  height: clamp(4rem, 11vw, 18rem);
+  overflow: hidden;
+}
+
+.name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.name h1 {
+  white-space: nowrap;
+  text-align: center;
+  line-height: 0.9;
+  color: var(--base-100);
+}
+
+.letter {
+  display: inline-block;
+  transform: translateY(110%);
+  will-change: transform;
+}
+
+.nameDefault .letter {
+  transform: translateY(0%);
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 2000px;
+  padding: 2.5rem;
+  transform: translateX(-50%);
+}
+
+.footer p {
+  color: var(--base-300);
+}
+
+@media (max-width: 999px) {
+  .section {
+    flex-direction: column-reverse;
+    gap: 2rem;
+  }
+
+  .avatars {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90%;
+    height: auto;
+  }
+
+  .avatar {
+    width: 60px;
+    height: 60px;
+    padding: 2.5px;
+    cursor: default;
+  }
+
+  .names {
+    height: 4rem;
+  }
+
+  .name {
+    display: none;
+  }
+
+  .nameDefault {
+    display: flex;
+  }
+
+  .nameDefault h1 .letter {
+    transform: translateY(0%) !important;
+  }
+
+  .name h1 {
+    font-size: 3rem;
+  }
+
+  .footer {
+    padding: 1.5rem;
+  }
+}

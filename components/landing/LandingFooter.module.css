@@ -1,0 +1,123 @@
+.footer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+  background-color: var(--base-600);
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  width: 100%;
+  pointer-events: none;
+}
+
+.heading {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  text-align: center;
+}
+
+.heading h2 {
+  width: 75%;
+  max-width: 1500px;
+  color: var(--base-100);
+}
+
+.buttonContainer {
+  position: relative;
+  z-index: 3;
+  pointer-events: all;
+}
+
+.postcards {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.postcard {
+  position: absolute;
+  width: clamp(360px, 40vw, 620px);
+  overflow: hidden;
+  border-radius: 0.35rem;
+  aspect-ratio: 5 / 7;
+  will-change: transform;
+}
+
+.bar {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 2000px;
+  padding: 2.5rem;
+  transform: translateX(-50%);
+}
+
+.barLeft {
+  display: flex;
+  align-items: center;
+}
+
+.bar p {
+  color: var(--base-300);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.barLinks {
+  display: flex;
+  gap: 2rem;
+}
+
+.barLinks a {
+  color: var(--base-300);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s;
+}
+
+.barLinks a:hover {
+  color: var(--base-100);
+}
+
+@media (max-width: 999px) {
+  .postcards {
+    display: none;
+  }
+
+  .bar {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .barLinks {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+}

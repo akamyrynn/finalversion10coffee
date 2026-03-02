@@ -1,0 +1,14 @@
+.about-info {
+  padding: 2rem 0 8rem 0;
+  background-color: var(--base-500);
+}
+
+.about-info .container {
+  display: flex;
+  flex-direction: column;
+}
+
+.about-info .container p,
+.about-info .container h3 {
+  margin-bottom: 2rem;
+}

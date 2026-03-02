@@ -1,0 +1,189 @@
+/* ===== Color variables (normal specificity — stays on the scope element) ===== */
+.landing-scope {
+  --base-100: #e0ded1;
+  --base-200: #a6a49a;
+  --base-300: #615558;
+  --base-400: #40373a;
+  --base-500: #231f20;
+  --base-600: #171415;
+
+  overflow-x: clip;
+  background-color: #000;
+  color: var(--base-100);
+}
+
+.landing-scope::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== Zero-specificity reset — never overrides module classes ===== */
+:where(.landing-scope) :where(*) {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(.landing-scope) :where(img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== Typography — low specificity via :where() ===== */
+:where(.landing-scope) :where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-google-sans), sans-serif;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+:where(.landing-scope) :where(h1) {
+  font-size: clamp(4rem, 12vw, 20rem);
+}
+
+:where(.landing-scope) :where(h2) {
+  font-size: clamp(3rem, 8vw, 13rem);
+}
+
+:where(.landing-scope) :where(h3) {
+  font-size: clamp(2rem, 5vw, 8rem);
+}
+
+:where(.landing-scope) :where(h4) {
+  font-size: clamp(1.75rem, 3.5vw, 5.25rem);
+}
+
+:where(.landing-scope) :where(h5) {
+  font-size: clamp(1.5rem, 3vw, 4.5rem);
+}
+
+:where(.landing-scope) :where(h6) {
+  font-size: clamp(1.25rem, 2vw, 4rem);
+}
+
+:where(.landing-scope) :where(p) {
+  font-size: 1.15rem;
+  font-weight: 450;
+  line-height: 1.15;
+  letter-spacing: -0.025rem;
+  color: var(--base-200);
+}
+
+:where(.landing-scope) :where(p.sm) {
+  font-size: 1rem;
+}
+
+:where(.landing-scope) :where(p.md) {
+  font-size: 1.45rem;
+  letter-spacing: -0.035rem;
+}
+
+:where(.landing-scope) :where(p.lg) {
+  font-size: 1.75rem;
+  letter-spacing: -0.045rem;
+}
+
+:where(.landing-scope) :where(p.mono) {
+  font-family: var(--font-google-sans), monospace;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: var(--base-300);
+}
+
+/* ===== SplitText helper classes (global, not hashed by CSS Modules) ===== */
+:where(.landing-scope) :where(.line),
+:where(.landing-scope) :where(.word) {
+  display: inline-block;
+  will-change: transform;
+}
+
+/* ===== Utility selectors ===== */
+:where(.landing-scope) :where(a[href^="tel"]),
+:where(.landing-scope) :where(a[href^="mailto"]) {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.landing-scope) :where(.container) {
+  position: relative;
+  width: 100%;
+  max-width: 2000px;
+  height: 100%;
+  padding: 2.5rem;
+  margin: 0 auto;
+}
+
+:where(.landing-scope) :where(.section-footer) {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 2000px;
+  padding: 2.5rem;
+  transform: translateX(-50%);
+}
+
+:where(.landing-scope) :where(.section-footer p) {
+  color: var(--base-100);
+}
+
+/* ===== Lenis smooth scroll ===== */
+html.lenis,
+html.lenis body {
+  height: auto;
+  overscroll-behavior: none;
+}
+
+/* Block ALL horizontal scroll + hide scrollbar */
+html.lenis {
+  overflow-x: hidden;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html.lenis::-webkit-scrollbar {
+  display: none;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1000px) {
+  :where(.landing-scope) :where(.container),
+  :where(.landing-scope) :where(.section-footer) {
+    padding: 1.5rem;
+  }
+
+  :where(.landing-scope) :where(p) {
+    font-size: 1rem;
+  }
+
+  :where(.landing-scope) :where(p.sm) {
+    font-size: 0.9rem;
+  }
+
+  :where(.landing-scope) :where(p.md) {
+    font-size: 1.35rem;
+    letter-spacing: -0.035rem;
+  }
+
+  :where(.landing-scope) :where(p.lg) {
+    font-size: 1.5rem;
+    letter-spacing: -0.045rem;
+  }
+}

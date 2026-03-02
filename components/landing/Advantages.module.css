@@ -1,0 +1,63 @@
+.stickyCards {
+  position: relative;
+  width: 100%;
+  background-color: var(--base-500);
+}
+
+.stickyCard {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  width: 50%;
+  height: 100svh;
+  padding: 2rem;
+  text-align: center;
+  will-change: transform;
+}
+
+.stickyCard:nth-child(odd) {
+  margin-left: auto;
+}
+
+.stickyCard:nth-child(3n + 1) {
+  background-color: var(--base-300);
+}
+
+.stickyCard:nth-child(3n + 2) {
+  background-color: var(--base-400);
+}
+
+.stickyCard:nth-child(3n + 3) {
+  background-color: var(--base-500);
+}
+
+.cardImg {
+  width: 30%;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  border-radius: 0.35rem;
+  aspect-ratio: 4 / 5;
+}
+
+.stickyCard h3 {
+  color: var(--base-100);
+}
+
+.stickyCard p {
+  max-width: 400px;
+}
+
+.mobile .stickyCard {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 100svh;
+}
+
+.mobile .stickyCard:nth-child(odd) {
+  margin-left: 0;
+}

@@ -1,0 +1,36 @@
+import { Suspense } from "react"
+import { HtmlWrapper } from "@/components/shared/html-wrapper"
+import { AuthModal } from "@/components/auth/auth-modal"
+import { getSiteSettings } from "@/lib/actions/site-settings"
+import { AuthProvider } from "@/providers/auth-provider"
+import "@/components/landing/_shared/landing-globals.css"
+
+export default async function PublicLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  let announcement: string | null = null
+  try {
+    const settings = await getSiteSettings()
+    if (settings?.loginAnnouncementEnabled && settings?.loginAnnouncement) {
+      announcement = settings.loginAnnouncement
+    }
+  } catch {
+    // Settings not yet initialized — skip
+  }
+
+  return (
+    <HtmlWrapper>
+      <AuthProvider>
+        <div className="landing-scope">
+          {children}
+        </div>
+      </AuthProvider>
+
+      <Suspense fallback={null}>
+        <AuthModal announcement={announcement} />
+      </Suspense>
+    </HtmlWrapper>
+  )
+}

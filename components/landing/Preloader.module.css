@@ -1,0 +1,183 @@
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 2rem;
+  overflow: hidden;
+  background: var(--base-600);
+  transition:
+    opacity 0.7s ease,
+    visibility 0.7s ease;
+}
+
+.isExiting {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.preloaderInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+.titleWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.title {
+  white-space: nowrap;
+  text-align: center;
+  line-height: 0.85;
+}
+
+.titleBase {
+  color: rgba(224, 222, 209, 0.16);
+}
+
+.titleFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  overflow: hidden;
+  color: var(--base-100);
+  will-change: width;
+}
+
+.actionSlot {
+  position: relative;
+  min-width: 16rem;
+  height: 3.75rem;
+}
+
+.loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  white-space: nowrap;
+  font-family: var(--font-google-sans), monospace;
+  color: var(--base-200);
+  transform: translate(-50%, -50%);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.loadingHidden {
+  opacity: 0;
+  transform: translate(-50%, calc(-50% - 6px));
+  pointer-events: none;
+}
+
+.buttonWrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  gap: 1rem;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+/* ===== Enter button with character hover ===== */
+.enterBtn {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2.25rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  color: var(--base-500);
+  background: none;
+  cursor: pointer;
+  border: none;
+  overflow: hidden;
+}
+
+.enterBtnBg {
+  position: absolute;
+  inset: 0;
+  background-color: var(--base-100);
+  border-radius: 0.25rem;
+  transition: transform 0.35s ease;
+}
+
+.enterBtn:hover .enterBtnBg {
+  transform: scale(0.92);
+}
+
+.btnText {
+  position: relative;
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.char {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.charDefault,
+.charHover {
+  display: inline-block;
+  will-change: transform;
+}
+
+.charHover {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ===== Store button ===== */
+.storeBtn {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2.25rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  color: var(--base-100);
+  background: transparent;
+  border: 1px solid var(--base-300);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.35s ease, background-color 0.35s ease;
+}
+
+.storeBtn:hover {
+  border-color: var(--base-100);
+  background-color: rgba(224, 222, 209, 0.08);
+}
+
+@media (max-width: 1000px) {
+  .preloader {
+    padding: 1.5rem;
+  }
+
+  .preloaderInner {
+    gap: 2.5rem;
+  }
+
+  .buttonWrap {
+    flex-direction: column;
+    align-items: center;
+  }
+}

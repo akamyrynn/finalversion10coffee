@@ -1,0 +1,591 @@
+"use client"
+
+import { useState, useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { getProductsByCategory } from "@/lib/actions/products"
+import {
+  Heart,
+  Plus,
+  ArrowLeft,
+  Coffee,
+  Leaf,
+  Package,
+  Star,
+  Check,
+  LayoutGrid,
+  List,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react"
+import { useCart } from "@/providers/cart-provider"
+import { formatPrice } from "@/lib/utils/format"
+import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { ProductTableRow } from "./product-table-row"
+import type { Product, ProductType, StickerType } from "@/types"
+
+interface Props {
+  categories: any[]
+  favoriteIds: string[]
+  activeType: ProductType
+}
+
+type ViewMode = "grid" | "list"
+type SortMode = "alphabetical" | "price"
+type FilterMode = "all" | "new" | "popular" | "month_discount"
+
+const typeTabs: { value: ProductType; label: string; icon: typeof Coffee }[] = [
+  { value: "coffee", label: "Кофе", icon: Coffee },
+  { value: "tea", label: "Чай", icon: Leaf },
+  { value: "accessory", label: "Аксессуары", icon: Package },
+]
+
+const sortLabels: Record<SortMode, string> = {
+  alphabetical: "По алфавиту",
+  price: "По цене",
+}
+
+const filterLabels: Record<FilterMode, string> = {
+  all: "Показывать все",
+  new: "Новинки",
+  popular: "Популярные",
+  month_discount: "Со скидкой",
+}
+
+const cardColors = [
+  "from-amber-50 to-orange-50",
+  "from-blue-50 to-indigo-50",
+  "from-emerald-50 to-green-50",
+  "from-rose-50 to-pink-50",
+  "from-violet-50 to-purple-50",
+  "from-amber-50 to-yellow-50",
+  "from-cyan-50 to-sky-50",
+  "from-fuchsia-50 to-pink-50",
+  "from-lime-50 to-emerald-50",
+  "from-teal-50 to-cyan-50",
+  "from-orange-50 to-red-50",
+  "from-indigo-50 to-blue-50",
+]
+
+export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
+  const router = useRouter()
+  const [viewMode, setViewMode] = useState<ViewMode>("list")
+  const [sortMode, setSortMode] = useState<SortMode>("alphabetical")
+  const [filterMode, setFilterMode] = useState<FilterMode>("all")
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [expandedName, setExpandedName] = useState("")
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [expandedListIds, setExpandedListIds] = useState<Set<number>>(new Set())
+
+  useEffect(() => {
+    if (!expandedId) {
+      setProducts([])
+      return
+    }
+    setLoading(true)
+    getProductsByCategory(expandedId).then((data) => {
+      setProducts(data)
+      setLoading(false)
+    })
+  }, [expandedId])
+
+  const allCats: any[] = useMemo(() => {
+    const result: any[] = []
+    categories.forEach((c: any) => {
+      if (c.children?.length) c.children.forEach((s: any) => result.push(s))
+      else result.push(c)
+    })
+    return result
+  }, [categories])
+
+  function toggleListCategory(id: number) {
+    setExpandedListIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function expandAll() {
+    setExpandedListIds(new Set(allCats.map((c) => c.id)))
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Type pills */}
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] font-bold text-neutral-300 mr-2 tracking-[0.15em] uppercase">
+          Каталог
+        </span>
+        {typeTabs.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => {
+              router.push(`/dashboard/catalog?type=${t.value}`)
+              setExpandedId(null)
+              setExpandedListIds(new Set())
+            }}
+            className={cn(
+              "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300",
+              activeType === t.value
+                ? "bg-coffee-950 text-white shadow-md shadow-coffee-950/10"
+                : "bg-white/80 text-neutral-500 hover:text-neutral-900 hover:bg-white hover:shadow-sm"
+            )}
+          >
+            <t.icon className="h-3.5 w-3.5" />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Toolbar: view toggle + sort + filter */}
+      {!expandedId && (
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Sort */}
+          <select
+            value={sortMode}
+            onChange={(e) => setSortMode(e.target.value as SortMode)}
+            className="text-[12px] font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg px-3 py-2 outline-none hover:border-neutral-400 transition-colors cursor-pointer"
+          >
+            {Object.entries(sortLabels).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+
+          {/* Filter */}
+          <select
+            value={filterMode}
+            onChange={(e) => setFilterMode(e.target.value as FilterMode)}
+            className="text-[12px] font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg px-3 py-2 outline-none hover:border-neutral-400 transition-colors cursor-pointer"
+          >
+            {Object.entries(filterLabels).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
+
+          <div className="ml-auto flex items-center gap-1">
+            {/* Expand all (list mode only) */}
+            {viewMode === "list" && (
+              <button
+                onClick={expandAll}
+                className="text-[11px] font-medium text-neutral-400 hover:text-neutral-900 transition-colors uppercase tracking-wider mr-3"
+              >
+                Развернуть все
+              </button>
+            )}
+
+            {/* View toggle */}
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "h-8 w-8 rounded-lg flex items-center justify-center transition-all",
+                viewMode === "grid"
+                  ? "bg-neutral-900 text-white"
+                  : "text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100"
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "h-8 w-8 rounded-lg flex items-center justify-center transition-all",
+                viewMode === "list"
+                  ? "bg-neutral-900 text-white"
+                  : "text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100"
+              )}
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── GRID MODE with expanded category ── */}
+      {viewMode === "grid" && expandedId ? (
+        <div>
+          <button
+            onClick={() => setExpandedId(null)}
+            className="flex items-center gap-2 text-neutral-400 hover:text-neutral-900 text-sm mb-5 transition-colors group"
+          >
+            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+            Назад
+          </button>
+          <h2 className="text-xl font-black text-neutral-900 mb-5">
+            {expandedName}
+          </h2>
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-8 w-8 rounded-full border-2 border-coffee-200 border-t-coffee-600 animate-spin" />
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-20">
+              <Coffee className="h-10 w-10 text-neutral-200 mx-auto mb-3" />
+              <p className="text-neutral-400 text-sm">Товары скоро появятся</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {products.map((p: any, i: number) => (
+                <ProdCard key={p.id} product={p} idx={i} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : viewMode === "grid" ? (
+        /* ── GRID MODE: category cards ── */
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {allCats.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center py-20">
+              <Coffee className="h-10 w-10 text-neutral-200 mb-3" />
+              <p className="text-neutral-400 text-sm">Нет категорий</p>
+            </div>
+          ) : (
+            allCats.map((cat: any, i: number) => {
+              const catImageUrl =
+                cat.image?.url || cat.image?.sizes?.card?.url || null
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setExpandedId(cat.id)
+                    setExpandedName(cat.name)
+                  }}
+                  className={cn(
+                    "text-left rounded-2xl aspect-[3/4] flex flex-col group transition-all duration-300 hover:shadow-xl hover:shadow-coffee-200/30 hover:-translate-y-1 active:scale-[0.97] border border-black/[0.02] overflow-hidden relative",
+                    catImageUrl
+                      ? "bg-neutral-900"
+                      : "bg-gradient-to-br p-6 " +
+                          cardColors[i % cardColors.length]
+                  )}
+                >
+                  {catImageUrl ? (
+                    <>
+                      <img
+                        src={catImageUrl}
+                        alt={cat.name}
+                        className="absolute inset-0 w-full h-full object-cover opacity-75 group-hover:opacity-85 group-hover:scale-105 transition-all duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                      <div className="relative mt-auto p-6">
+                        <h3 className="text-lg font-black text-white leading-tight drop-shadow-md">
+                          {cat.name}
+                        </h3>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-11 w-11 rounded-xl bg-white/80 backdrop-blur-sm flex items-center justify-center mb-auto shadow-sm">
+                        <Coffee className="h-5 w-5 text-neutral-500" />
+                      </div>
+                      <h3 className="text-[15px] font-bold text-neutral-800 leading-tight mt-3">
+                        {cat.name}
+                      </h3>
+                    </>
+                  )}
+                </button>
+              )
+            })
+          )}
+        </div>
+      ) : (
+        /* ── LIST MODE: accordion categories with product table ── */
+        <div>
+          {allCats.length === 0 ? (
+            <div className="flex flex-col items-center py-20">
+              <Coffee className="h-10 w-10 text-neutral-200 mb-3" />
+              <p className="text-neutral-400 text-sm">Нет категорий</p>
+            </div>
+          ) : (
+            <>
+              {/* Group by parent category */}
+              {categories.map((parentCat: any) => {
+                const subs =
+                  parentCat.children?.length > 0
+                    ? parentCat.children
+                    : [parentCat]
+                return (
+                  <div key={parentCat.id} className="mb-6">
+                    {/* Parent label */}
+                    {parentCat.children?.length > 0 && (
+                      <p className="text-[10px] font-bold text-neutral-300 tracking-[0.2em] uppercase mb-2">
+                        {parentCat.name}
+                      </p>
+                    )}
+
+                    {/* Subcategory accordions */}
+                    {subs.map((cat: any) => (
+                      <ListCategorySection
+                        key={cat.id}
+                        category={cat}
+                        isExpanded={expandedListIds.has(cat.id)}
+                        onToggle={() => toggleListCategory(cat.id)}
+                        favoriteIds={favoriteIds}
+                        sortMode={sortMode}
+                        filterMode={filterMode}
+                      />
+                    ))}
+                  </div>
+                )
+              })}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── List mode: category section with product table ──
+function ListCategorySection({
+  category,
+  isExpanded,
+  onToggle,
+  favoriteIds,
+  sortMode,
+  filterMode,
+}: {
+  category: any
+  isExpanded: boolean
+  onToggle: () => void
+  favoriteIds: string[]
+  sortMode: SortMode
+  filterMode: FilterMode
+}) {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    if (isExpanded && !loaded) {
+      setLoading(true)
+      getProductsByCategory(category.id).then((data) => {
+        setProducts(data)
+        setLoading(false)
+        setLoaded(true)
+      })
+    }
+  }, [isExpanded, loaded, category.id])
+
+  const filteredAndSorted = useMemo(() => {
+    let result = [...products]
+
+    // Filter by sticker
+    if (filterMode !== "all") {
+      result = result.filter((p) =>
+        p.stickers?.includes(filterMode as StickerType)
+      )
+    }
+
+    // Sort
+    if (sortMode === "alphabetical") {
+      result.sort((a, b) => a.name.localeCompare(b.name, "ru"))
+    } else if (sortMode === "price") {
+      result.sort((a, b) => {
+        const priceA = a.variants?.[0]?.price ?? 0
+        const priceB = b.variants?.[0]?.price ?? 0
+        return priceA - priceB
+      })
+    }
+
+    return result
+  }, [products, sortMode, filterMode])
+
+  return (
+    <div className="border-b border-neutral-100">
+      <button
+        onClick={onToggle}
+        className="flex items-center justify-between w-full py-3.5 text-left group hover:bg-white/50 transition-colors rounded-lg px-1"
+      >
+        <h3 className="text-[14px] font-black text-neutral-900 uppercase tracking-wide">
+          {category.name}
+        </h3>
+        {isExpanded ? (
+          <ChevronDown className="h-4 w-4 text-neutral-400" />
+        ) : (
+          <ChevronRight className="h-4 w-4 text-neutral-400" />
+        )}
+      </button>
+
+      {isExpanded && (
+        <div className="pb-4">
+          {loading ? (
+            <div className="py-6 flex justify-center">
+              <div className="h-6 w-6 rounded-full border-2 border-coffee-200 border-t-coffee-600 animate-spin" />
+            </div>
+          ) : filteredAndSorted.length === 0 ? (
+            <div className="py-4 text-[12px] text-neutral-400 px-1">
+              {filterMode !== "all"
+                ? "Нет товаров с выбранным фильтром"
+                : "Товары скоро появятся"}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              {/* Table header */}
+              <div className="grid grid-cols-[1fr_auto] gap-0 items-end min-w-[700px]">
+                <div />
+                <div className="grid grid-cols-2 gap-0">
+                  <div className="text-center text-[10px] font-bold text-neutral-400 tracking-wider uppercase pb-1 px-2 border-b-2 border-neutral-200 min-w-[200px]">
+                    Упаковка 250 г
+                  </div>
+                  <div className="text-center text-[10px] font-bold text-neutral-400 tracking-wider uppercase pb-1 px-2 border-b-2 border-coffee-300 min-w-[200px]">
+                    Упаковка 1 кг
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[1fr_auto] gap-0 items-center min-w-[700px] text-[10px] font-medium text-neutral-400 uppercase tracking-wider border-b border-neutral-100 py-1.5">
+                <div className="px-1">Наименование</div>
+                <div className="grid grid-cols-2 gap-0">
+                  <div className="grid grid-cols-[60px_70px_70px] gap-0 text-center min-w-[200px]">
+                    <div>Цена</div>
+                    <div>В зёрнах</div>
+                    <div>Молотый</div>
+                  </div>
+                  <div className="grid grid-cols-[60px_70px_70px] gap-0 text-center min-w-[200px]">
+                    <div>Цена</div>
+                    <div>В зёрнах</div>
+                    <div>Молотый</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product rows */}
+              {filteredAndSorted.map((product) => (
+                <ProductTableRow
+                  key={product.id}
+                  product={product}
+                  isFavorite={favoriteIds.includes(product.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Grid mode: product card ──
+function ProdCard({ product, idx }: { product: any; idx: number }) {
+  const { addItem } = useCart()
+  const variant = product.variants?.[0]
+  const [added, setAdded] = useState(false)
+  const imageUrl = product.images?.[0] || null
+
+  async function handleAdd(e: React.MouseEvent) {
+    e.preventDefault()
+    if (!variant) return
+    await addItem({
+      productId: String(product.id),
+      variantId: String(variant.id || idx),
+      quantity: 1,
+      grindOption: variant.grind_options?.[0] || undefined,
+    })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1200)
+  }
+
+  return (
+    <div
+      className="group bg-white rounded-[18px] overflow-hidden flex flex-col border border-black/[0.03] hover:shadow-xl hover:shadow-coffee-200/20 transition-all duration-400 hover:-translate-y-1 animate-fade-in-up"
+      style={{
+        animationDelay: `${idx * 60}ms`,
+        animationFillMode: "backwards",
+      }}
+    >
+      <div className="aspect-square bg-gradient-to-br from-coffee-50 to-neutral-50 flex items-center justify-center overflow-hidden relative">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <Coffee className="h-10 w-10 text-neutral-200" />
+        )}
+        {product.q_grader_rating && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full">
+            <Star className="h-2.5 w-2.5 text-gold-400 fill-gold-400" />
+            <span className="text-[10px] font-bold text-white">
+              Q{product.q_grader_rating}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {product.stickers?.length > 0 && (
+        <div className="flex gap-1 px-4 pt-3">
+          {product.stickers.map((s: string) => (
+            <span
+              key={s}
+              className={cn(
+                "text-[9px] font-bold px-2 py-0.5 rounded-full",
+                s === "new"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : s === "popular"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-red-100 text-red-700"
+              )}
+            >
+              {s === "new"
+                ? "Новинка"
+                : s === "popular"
+                  ? "Популярное"
+                  : "Скидка"}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="p-4 pt-2 flex-1 flex flex-col">
+        <Link
+          href={`/dashboard/product/${product.id}`}
+          className="flex-1 min-w-0"
+        >
+          <h4 className="text-[13px] font-bold text-neutral-900 leading-tight group-hover:text-coffee-700 transition-colors">
+            {product.name}
+          </h4>
+          {product.region && (
+            <p className="text-[11px] text-neutral-400 mt-0.5 truncate">
+              {product.region}
+            </p>
+          )}
+        </Link>
+
+        {variant && (
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-neutral-100">
+            <div>
+              <span className="text-[15px] font-black text-neutral-900">
+                {formatPrice(variant.price)}
+              </span>
+              <span className="text-[10px] text-neutral-400 ml-1">
+                {variant.name}
+              </span>
+            </div>
+            <button
+              onClick={handleAdd}
+              className={cn(
+                "h-9 w-9 rounded-full flex items-center justify-center transition-all duration-300",
+                added
+                  ? "bg-emerald-500 text-white scale-110 shadow-lg shadow-emerald-500/30"
+                  : "bg-coffee-950 text-white hover:bg-coffee-800 hover:shadow-md active:scale-90"
+              )}
+            >
+              {added ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

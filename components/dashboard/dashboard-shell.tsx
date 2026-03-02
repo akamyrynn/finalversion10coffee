@@ -1,0 +1,504 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useAuth } from "@/providers/auth-provider"
+import { useCart } from "@/providers/cart-provider"
+import { useNotifications } from "@/providers/notification-provider"
+import { signOut } from "@/lib/actions/auth"
+import { getFavoriteProducts } from "@/lib/actions/products"
+import { CartSidebar } from "./cart-sidebar"
+import {
+  LogOut,
+  Coffee,
+  Settings,
+  Heart,
+  Bell,
+  X,
+  ShoppingBag,
+  Newspaper,
+  Package,
+  CheckCheck,
+  Building2,
+  FileText,
+  Send,
+  GraduationCap,
+  Globe,
+  Store,
+} from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { formatDateTime } from "@/lib/utils/format"
+import type { Product, NotificationType } from "@/types"
+
+type SlidePanel = "favorites" | "notifications" | null
+
+export function DashboardShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const { user } = useAuth()
+  const { items, updateQuantity, removeItem, clearCart } = useCart()
+  const { notifications, unreadCount, markAsRead, markAllAsRead, hasNewNotification } = useNotifications()
+
+  // Badge disappear animation
+  const [badgeVisible, setBadgeVisible] = useState(unreadCount > 0)
+  const [badgeAnimatingOut, setBadgeAnimatingOut] = useState(false)
+  const prevUnreadCount = useRef(unreadCount)
+
+  useEffect(() => {
+    if (unreadCount > 0) {
+      setBadgeVisible(true)
+      setBadgeAnimatingOut(false)
+    } else if (prevUnreadCount.current > 0 && unreadCount === 0) {
+      setBadgeAnimatingOut(true)
+      const timer = setTimeout(() => {
+        setBadgeVisible(false)
+        setBadgeAnimatingOut(false)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+    prevUnreadCount.current = unreadCount
+  }, [unreadCount])
+  const [activePanel, setActivePanel] = useState<SlidePanel>(null)
+  const [favorites, setFavorites] = useState<Product[]>([])
+  const [favsLoading, setFavsLoading] = useState(false)
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || ""
+
+  const isCatalog = pathname.startsWith("/dashboard/catalog") || pathname.startsWith("/dashboard/product") || pathname === "/dashboard/favorites"
+  const isDashboard = !isCatalog
+
+  const loadFavorites = useCallback(async () => {
+    setFavsLoading(true)
+    const data = await getFavoriteProducts()
+    setFavorites(data)
+    setFavsLoading(false)
+  }, [])
+
+  function togglePanel(panel: SlidePanel) {
+    if (activePanel === panel) {
+      setActivePanel(null)
+    } else {
+      setActivePanel(panel)
+      if (panel === "favorites") loadFavorites()
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-neutral-950 p-2 md:p-3">
+      <div className="bg-[#f5f4f0] rounded-[22px] min-h-[calc(100vh-1.5rem)] overflow-hidden shadow-sm flex flex-col relative">
+
+        {/* ── TOP NAV BAR ── */}
+        <header className="flex items-center justify-between h-16 px-5 shrink-0 z-30 relative">
+          {/* Left: Logo */}
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
+              <Coffee className="h-4.5 w-4.5 text-coffee-950" />
+            </div>
+            <span className="text-[15px] font-black tracking-tight text-neutral-900 hidden sm:block">
+              10COFFEE
+            </span>
+          </Link>
+
+          {/* Center: Tab Switcher */}
+          <div className="flex items-center bg-coffee-950 rounded-full p-1 gap-0.5">
+            <Link
+              href="/dashboard"
+              className={cn(
+                "px-5 py-2 rounded-full text-[13px] font-semibold transition-all duration-300",
+                isDashboard
+                  ? "bg-white/15 text-white shadow-sm backdrop-blur-sm"
+                  : "text-white/40 hover:text-white/70"
+              )}
+            >
+              Кабинет
+            </Link>
+            <Link
+              href="/dashboard/catalog"
+              className={cn(
+                "px-5 py-2 rounded-full text-[13px] font-semibold transition-all duration-300",
+                isCatalog
+                  ? "bg-white/15 text-white shadow-sm backdrop-blur-sm"
+                  : "text-white/40 hover:text-white/70"
+              )}
+            >
+              Каталог
+            </Link>
+          </div>
+
+          {/* Right: Icons + User */}
+          <div className="flex items-center gap-1">
+            {/* Favorites */}
+            <button
+              onClick={() => togglePanel("favorites")}
+              className={cn(
+                "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
+                activePanel === "favorites"
+                  ? "bg-red-50 text-red-500"
+                  : "text-neutral-400 hover:text-red-500 hover:bg-red-50/50"
+              )}
+            >
+              <Heart className={cn("h-[18px] w-[18px]", activePanel === "favorites" && "fill-red-500")} />
+            </button>
+
+            {/* Notifications */}
+            <button
+              onClick={() => togglePanel("notifications")}
+              className={cn(
+                "relative h-9 w-9 rounded-xl flex items-center justify-center transition-all",
+                activePanel === "notifications"
+                  ? "bg-violet-50 text-violet-600"
+                  : "text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100"
+              )}
+            >
+              <Bell className={cn("h-[18px] w-[18px]", hasNewNotification && "animate-bell-ring")} />
+              {badgeVisible && (
+                <span
+                  className={cn(
+                    "absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5 transition-all duration-300",
+                    badgeAnimatingOut ? "opacity-0 scale-0" : "opacity-100 scale-100"
+                  )}
+                >
+                  {unreadCount || prevUnreadCount.current}
+                </span>
+              )}
+            </button>
+
+            <div className="w-px h-6 bg-neutral-200 mx-1.5" />
+
+            {/* User dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full hover:bg-black/[0.04] pl-2 pr-1 py-1 transition-colors">
+                  <span className="text-[13px] font-medium text-neutral-600 hidden sm:block">{displayName}</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-gold-400 to-gold-600 text-coffee-950 text-[11px] font-bold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                <div className="px-3 py-2">
+                  <p className="text-sm font-semibold">{displayName}</p>
+                  <p className="text-xs text-neutral-500">{user?.email}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Настройки
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => signOut()}
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Выйти
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {/* ── BODY ── */}
+        <div className="flex flex-1 min-h-0 overflow-hidden relative">
+
+          {/* Left sidebar - Cabinet navigation */}
+          {isDashboard && (
+            <aside className="w-[210px] shrink-0 hidden lg:flex flex-col pt-4 pb-6 pl-5 pr-2 overflow-y-auto">
+              <nav className="space-y-0.5">
+                {[
+                  { href: "/dashboard/orders", label: "Заказы", icon: Package },
+                  { href: "/dashboard/companies", label: "Компании", icon: Building2 },
+                  { href: "/dashboard/news", label: "Новости", icon: Newspaper },
+                  { href: "/dashboard/settings", label: "Настройки", icon: Settings },
+                ].map((item) => {
+                  const Icon = item.icon
+                  const active = pathname === item.href || pathname.startsWith(item.href + "/")
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all",
+                        active
+                          ? "bg-white text-neutral-900 font-semibold shadow-sm"
+                          : "text-neutral-500 hover:text-neutral-900 hover:bg-white/60"
+                      )}
+                    >
+                      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-coffee-600" : "text-neutral-300")} />
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </nav>
+
+              <div className="h-px bg-neutral-200/50 my-4 mx-1" />
+
+              <div className="space-y-0.5">
+                <a
+                  href="https://www.10coffee.ru/obuchenie"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-neutral-500 hover:text-neutral-900 hover:bg-white/60 transition-all"
+                >
+                  <GraduationCap className="h-4 w-4 text-neutral-300 shrink-0" />
+                  Обучение
+                </a>
+                <a
+                  href="#"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-neutral-500 hover:text-neutral-900 hover:bg-white/60 transition-all"
+                >
+                  <FileText className="h-4 w-4 text-neutral-300 shrink-0" />
+                  Прайс-лист
+                </a>
+                <a
+                  href="https://t.me/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-neutral-500 hover:text-neutral-900 hover:bg-white/60 transition-all"
+                >
+                  <Send className="h-3.5 w-3.5 text-neutral-300 shrink-0" />
+                  Telegram
+                </a>
+              </div>
+
+              <div className="h-px bg-neutral-200/50 my-4 mx-1" />
+
+              <div className="space-y-0.5">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-neutral-500 hover:text-neutral-900 hover:bg-white/60 transition-all"
+                >
+                  <Globe className="h-4 w-4 text-neutral-300 shrink-0" />
+                  Оптовый сайт
+                </Link>
+                <a
+                  href="https://10cofshop.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-neutral-500 hover:text-neutral-900 hover:bg-white/60 transition-all"
+                >
+                  <Store className="h-4 w-4 text-neutral-300 shrink-0" />
+                  Интернет-магазин
+                </a>
+              </div>
+            </aside>
+          )}
+
+          {/* Main content */}
+          <main className="flex-1 min-w-0 overflow-y-auto">
+            <div className="p-5 md:p-6">
+              {children}
+            </div>
+          </main>
+
+          {/* Right sidebar - Cart */}
+          <CartSidebar
+            items={items}
+            onUpdateQuantity={updateQuantity}
+            onRemoveItem={removeItem}
+            onClearCart={clearCart}
+          />
+
+          {/* ── SLIDE-OVER PANEL ── */}
+          {activePanel && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/20 z-40 animate-fade-in"
+                onClick={() => setActivePanel(null)}
+              />
+
+              {/* Panel */}
+              <div className="absolute top-0 right-0 bottom-0 w-full max-w-[520px] bg-white z-50 shadow-2xl shadow-black/20 animate-slide-in-right flex flex-col rounded-l-2xl">
+                {/* Panel header */}
+                <div className="flex items-center justify-between px-6 h-16 border-b border-neutral-100 shrink-0">
+                  <div className="flex items-center gap-3">
+                    {activePanel === "favorites" ? (
+                      <>
+                        <div className="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center">
+                          <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                        </div>
+                        <h2 className="text-[15px] font-bold text-neutral-900">Избранное</h2>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-9 w-9 rounded-xl bg-violet-50 flex items-center justify-center">
+                          <Bell className="h-4 w-4 text-violet-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-[15px] font-bold text-neutral-900">Уведомления</h2>
+                          {unreadCount > 0 && (
+                            <p className="text-[11px] text-neutral-400">{unreadCount} непрочитанных</p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {activePanel === "notifications" && unreadCount > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 transition-colors"
+                      >
+                        <CheckCheck className="h-3.5 w-3.5" />
+                        Прочитать все
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setActivePanel(null)}
+                      className="h-9 w-9 rounded-xl flex items-center justify-center text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 transition-all"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Panel body */}
+                <div className="flex-1 overflow-y-auto">
+                  {activePanel === "favorites" ? (
+                    <FavoritesContent favorites={favorites} loading={favsLoading} onClose={() => setActivePanel(null)} />
+                  ) : (
+                    <NotificationsContent notifications={notifications} markAsRead={markAsRead} />
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Favorites Panel Content ──
+function FavoritesContent({ favorites, loading, onClose }: { favorites: Product[]; loading: boolean; onClose: () => void }) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 rounded-full border-2 border-coffee-200 border-t-coffee-600 animate-spin" />
+      </div>
+    )
+  }
+
+  if (favorites.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+        <div className="h-16 w-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+          <Heart className="h-7 w-7 text-red-200" />
+        </div>
+        <p className="text-sm font-semibold text-neutral-900">Нет избранных</p>
+        <p className="text-[12px] text-neutral-400 mt-1">Нажмите на сердечко, чтобы сохранить товар</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-4 space-y-2">
+      {favorites.map((product) => {
+        const imageUrl = product.images?.[0] || null
+        return (
+          <Link
+            key={product.id}
+            href={`/dashboard/product/${product.id}`}
+            onClick={onClose}
+            className="flex items-center gap-4 p-3 rounded-xl hover:bg-neutral-50 transition-colors group"
+          >
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-coffee-50 to-neutral-50 flex items-center justify-center shrink-0 overflow-hidden">
+              {imageUrl ? (
+                <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
+              ) : (
+                <Coffee className="h-5 w-5 text-coffee-200" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-neutral-900 group-hover:text-coffee-700 transition-colors">{product.name}</p>
+              {product.region && (
+                <p className="text-[11px] text-neutral-400 mt-0.5">{product.region}</p>
+              )}
+              {product.variants?.[0] && (
+                <p className="text-[12px] font-semibold text-neutral-600 mt-1">
+                  от {Math.round(product.variants[0].price).toLocaleString("ru-RU")} ₽
+                </p>
+              )}
+            </div>
+            <Heart className="h-4 w-4 fill-red-500 text-red-500 shrink-0" />
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Notifications Panel Content ──
+const notifIcons: Record<NotificationType, typeof Bell> = {
+  order_update: ShoppingBag,
+  news: Newspaper,
+  product_restock: Package,
+}
+
+const notifColors: Record<NotificationType, string> = {
+  order_update: "bg-amber-50 text-amber-600",
+  news: "bg-emerald-50 text-emerald-600",
+  product_restock: "bg-blue-50 text-blue-600",
+}
+
+function NotificationsContent({
+  notifications,
+  markAsRead,
+}: {
+  notifications: Array<{ id: string; type: NotificationType; title: string; message: string; is_read: boolean; created_at: string }>
+  markAsRead: (id: string) => Promise<void>
+}) {
+  if (notifications.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+        <div className="h-16 w-16 rounded-2xl bg-violet-50 flex items-center justify-center mb-4">
+          <Bell className="h-7 w-7 text-violet-200" />
+        </div>
+        <p className="text-sm font-semibold text-neutral-900">Нет уведомлений</p>
+        <p className="text-[12px] text-neutral-400 mt-1">Уведомления о заказах появятся здесь</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-4 space-y-2">
+      {notifications.map((n) => {
+        const Icon = notifIcons[n.type] || Bell
+        const colorClass = notifColors[n.type] || "bg-neutral-50 text-neutral-600"
+        return (
+          <div
+            key={n.id}
+            onClick={() => !n.is_read && markAsRead(n.id)}
+            className={cn(
+              "flex gap-3 p-4 rounded-xl transition-colors cursor-pointer",
+              !n.is_read ? "bg-violet-50/50 hover:bg-violet-50" : "hover:bg-neutral-50"
+            )}
+          >
+            <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", colorClass)}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] font-semibold text-neutral-900">{n.title}</span>
+                {!n.is_read && <div className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />}
+              </div>
+              <p className="text-[12px] text-neutral-500 mt-0.5 leading-relaxed">{n.message}</p>
+              <p className="text-[11px] text-neutral-400 mt-1">{formatDateTime(n.created_at)}</p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}

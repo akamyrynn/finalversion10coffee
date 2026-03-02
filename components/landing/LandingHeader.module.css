@@ -1,0 +1,234 @@
+/* ===== Floating pill navbar ===== */
+.navBar {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: calc(100% - 3rem);
+  max-width: 1400px;
+  padding: 0.65rem 0.65rem 0.65rem 1.75rem;
+  transform: translateX(-50%);
+  background-color: rgba(23, 20, 21, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(224, 222, 209, 0.1);
+  border-radius: 999px;
+  transition:
+    top 0.5s cubic-bezier(0.77, 0, 0.18, 1),
+    padding 0.5s cubic-bezier(0.77, 0, 0.18, 1),
+    width 0.5s cubic-bezier(0.77, 0, 0.18, 1),
+    max-width 0.5s cubic-bezier(0.77, 0, 0.18, 1),
+    background-color 0.5s cubic-bezier(0.77, 0, 0.18, 1),
+    border-color 0.5s cubic-bezier(0.77, 0, 0.18, 1);
+}
+
+/* Compact on scroll */
+.navBarCompact {
+  top: 0.75rem;
+  max-width: 16rem;
+  padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+  background-color: rgba(23, 20, 21, 0.88);
+  border-color: rgba(224, 222, 209, 0.15);
+}
+
+/* ===== Left: logo ===== */
+.navLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition:
+    opacity 0.4s cubic-bezier(0.77, 0, 0.18, 1),
+    transform 0.4s cubic-bezier(0.77, 0, 0.18, 1),
+    width 0.4s cubic-bezier(0.77, 0, 0.18, 1);
+  overflow: hidden;
+}
+
+.hideOnCompact {
+  max-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-16px);
+  overflow: hidden;
+  transition:
+    max-width 0.4s cubic-bezier(0.77, 0, 0.18, 1),
+    opacity 0.3s ease,
+    transform 0.4s cubic-bezier(0.77, 0, 0.18, 1);
+}
+
+.navLogo {
+  font-family: var(--font-google-sans), sans-serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--base-100);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  transition: opacity 0.3s;
+}
+
+.navLogo:hover {
+  opacity: 0.7;
+}
+
+/* ===== Center: links ===== */
+.navCenter {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  overflow: hidden;
+  transition:
+    max-width 0.4s cubic-bezier(0.77, 0, 0.18, 1),
+    opacity 0.3s ease,
+    transform 0.4s cubic-bezier(0.77, 0, 0.18, 1);
+}
+
+.navLink {
+  font-size: 0.85rem;
+  font-weight: 450;
+  color: var(--base-200);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: color 0.3s;
+}
+
+.navLink:hover {
+  color: var(--base-100);
+}
+
+/* ===== Right: actions ===== */
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Pill-shaped action button (like "Overview" in reference) */
+.navPillBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  border: 1px solid rgba(224, 222, 209, 0.18);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--base-100);
+  text-decoration: none;
+  background: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.3s,
+    background-color 0.3s,
+    padding 0.4s cubic-bezier(0.77, 0, 0.18, 1);
+}
+
+.navPillBtn:hover {
+  border-color: rgba(224, 222, 209, 0.4);
+  background-color: rgba(224, 222, 209, 0.06);
+}
+
+.navPillBtnCompact {
+  padding: 0.45rem 1.1rem;
+  font-size: 0.8rem;
+}
+
+.navAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: rgba(224, 222, 209, 0.12);
+  border: 1px solid rgba(224, 222, 209, 0.15);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--base-100);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.navAvatar:hover {
+  background-color: rgba(224, 222, 209, 0.2);
+  border-color: rgba(224, 222, 209, 0.3);
+}
+
+/* ===== Burger — clean 2-line ===== */
+.burger {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid rgba(224, 222, 209, 0.18);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  gap: 4px;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.burger:hover {
+  border-color: rgba(224, 222, 209, 0.4);
+  background-color: rgba(224, 222, 209, 0.06);
+}
+
+.burgerLine {
+  display: block;
+  width: 12px;
+  height: 1.5px;
+  background-color: var(--base-100);
+  border-radius: 1px;
+  transition:
+    transform 0.4s cubic-bezier(0.77, 0, 0.18, 1),
+    opacity 0.3s ease;
+  transform-origin: center;
+}
+
+/* X state */
+.burgerOpen .burgerLine:nth-child(1) {
+  transform: translateY(5.5px) rotate(45deg);
+}
+
+.burgerOpen .burgerLine:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.burgerOpen .burgerLine:nth-child(3) {
+  transform: translateY(-5.5px) rotate(-45deg);
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 1000px) {
+  .navBar {
+    top: 0.75rem;
+    width: calc(100% - 2rem);
+    padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+  }
+
+  .navBarCompact {
+    top: 0.5rem;
+    padding: 0.4rem 0.4rem 0.4rem 1rem;
+  }
+
+  .navCenter {
+    display: none;
+  }
+
+  .navPillBtn {
+    display: none;
+  }
+}
