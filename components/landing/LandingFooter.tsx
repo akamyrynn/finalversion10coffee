@@ -141,7 +141,7 @@ export default function LandingFooter() {
       <div className={styles.bar}>
         <div className={styles.barLeft}>
           <Copy type="lines" animateOnScroll>
-            <p className="sm">&copy;2025 10coffee. Все права защищены</p>
+            <p className="sm">&copy;2026 10coffee. Все права защищены</p>
           </Copy>
         </div>
         <div className={styles.barLinks}>
