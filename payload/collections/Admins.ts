@@ -5,7 +5,7 @@ export const Admins: CollectionConfig = {
   auth: true,
   admin: {
     useAsTitle: "fullName",
-    group: "Пользователи",
+    group: "Администрирование",
     description: "Администраторы и менеджеры платформы",
   },
   labels: {

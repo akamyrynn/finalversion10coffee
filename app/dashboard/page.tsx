@@ -46,14 +46,14 @@ export default async function DashboardPage() {
   })
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* ── Header ── */}
       <div>
         <p className="text-[10px] font-medium text-neutral-300 tracking-[0.25em] uppercase">
           {today}
         </p>
         <div className="flex items-end justify-between mt-1">
-          <h1 className="text-[28px] font-black text-neutral-900 tracking-tight leading-none">
+          <h1 className="text-[22px] sm:text-[28px] font-black text-neutral-900 tracking-tight leading-none">
             Обзор
           </h1>
           {(activeOrders > 0 || companies.length > 0) && (
@@ -101,8 +101,8 @@ export default async function DashboardPage() {
 
         {recentOrders.length === 0 ? (
           <div className="bg-white rounded-2xl border border-black/[0.04] px-6 py-10 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-coffee-50 flex items-center justify-center mx-auto mb-4">
-              <Coffee className="h-6 w-6 text-coffee-300" />
+            <div className="h-14 w-14 rounded-2xl bg-[#faead5] flex items-center justify-center mx-auto mb-4">
+              <Coffee className="h-6 w-6 text-[#5b328a]/40" />
             </div>
             <p className="text-[14px] font-bold text-neutral-900">
               Нет заказов
@@ -112,7 +112,7 @@ export default async function DashboardPage() {
             </p>
             <Link
               href="/dashboard/catalog"
-              className="inline-flex items-center gap-1.5 mt-4 text-[12px] font-bold text-coffee-700 hover:text-coffee-900 transition-colors"
+              className="inline-flex items-center gap-1.5 mt-4 text-[12px] font-bold text-[#5b328a] hover:text-[#4a2870] transition-colors"
             >
               Перейти в каталог
               <ArrowUpRight className="h-3 w-3" />
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
                 <Link
                   key={order.id}
                   href="/dashboard/orders"
-                  className="block bg-white rounded-xl border border-black/[0.04] px-5 py-4 hover:shadow-sm transition-all group"
+                  className="block bg-white rounded-xl border border-black/[0.04] px-4 sm:px-5 py-3 sm:py-4 hover:shadow-sm transition-all group"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
@@ -244,7 +244,7 @@ export default async function DashboardPage() {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-bold text-neutral-900 line-clamp-1 group-hover:text-coffee-700 transition-colors">
+                  <p className="text-[13px] font-bold text-neutral-900 line-clamp-1 group-hover:text-[#5b328a] transition-colors">
                     {item.title}
                   </p>
                   {item.excerpt && (

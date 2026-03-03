@@ -57,8 +57,8 @@
   padding: 1.25rem 2.75rem;
   border-radius: 0.35rem;
   border: none;
-  background-color: var(--base-100);
-  color: var(--base-500);
+  background-color: var(--btn-bg);
+  color: var(--btn-fg);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
@@ -75,12 +75,12 @@
 }
 
 .error {
-  color: #ef4444;
+  color: #e6610d;
   font-size: 0.9rem;
 }
 
 .success {
-  color: #22c55e;
+  color: #5b328a;
   font-size: 1rem;
   font-weight: 500;
 }

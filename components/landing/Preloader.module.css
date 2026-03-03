@@ -9,7 +9,7 @@
   min-height: 100vh;
   padding: 2rem;
   overflow: hidden;
-  background: var(--base-600);
+  background: #1d1d1b;
   transition:
     opacity 0.7s ease,
     visibility 0.7s ease;
@@ -40,7 +40,7 @@
 }
 
 .titleBase {
-  color: rgba(224, 222, 209, 0.16);
+  color: rgba(255, 255, 255, 0.16);
 }
 
 .titleFill {
@@ -49,7 +49,7 @@
   left: 0;
   width: 0%;
   overflow: hidden;
-  color: var(--base-100);
+  color: #ffffff;
   will-change: width;
 }
 
@@ -65,8 +65,8 @@
   left: 50%;
   margin: 0;
   white-space: nowrap;
-  font-family: var(--font-google-sans), monospace;
-  color: var(--base-200);
+  font-family: var(--font-google-sans), sans-serif;
+  color: rgba(255, 255, 255, 0.5);
   transform: translate(-50%, -50%);
   transition:
     opacity 0.35s ease,
@@ -101,7 +101,7 @@
   padding: 1rem 2.25rem;
   border-radius: 0.25rem;
   text-decoration: none;
-  color: var(--base-500);
+  color: #ffffff;
   background: none;
   cursor: pointer;
   border: none;
@@ -111,7 +111,7 @@
 .enterBtnBg {
   position: absolute;
   inset: 0;
-  background-color: var(--base-100);
+  background-color: #5b328a;
   border-radius: 0.25rem;
   transition: transform 0.35s ease;
 }
@@ -154,17 +154,17 @@
   padding: 1rem 2.25rem;
   border-radius: 0.25rem;
   text-decoration: none;
-  color: var(--base-100);
+  color: #ffffff;
   background: transparent;
-  border: 1px solid var(--base-300);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
   overflow: hidden;
   transition: border-color 0.35s ease, background-color 0.35s ease;
 }
 
 .storeBtn:hover {
-  border-color: var(--base-100);
-  background-color: rgba(224, 222, 209, 0.08);
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 @media (max-width: 1000px) {
@@ -176,8 +176,22 @@
     gap: 2.5rem;
   }
 
+  .actionSlot {
+    min-width: auto;
+    width: 100%;
+  }
+
   .buttonWrap {
     flex-direction: column;
     align-items: center;
+    width: 100%;
+  }
+
+  .enterBtn,
+  .storeBtn {
+    padding: 0.85rem 1.75rem;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 280px;
   }
 }

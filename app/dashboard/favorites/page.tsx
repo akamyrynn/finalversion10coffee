@@ -1,42 +1,41 @@
-import { Heart, Coffee } from "lucide-react"
+"use client"
+
+import { useState, useEffect, useTransition } from "react"
+import { Heart, Coffee, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { getPayload } from "payload"
-import configPromise from "@payload-config"
-import { createClient } from "@/lib/supabase/server"
+import { toggleFavorite, getFavoriteProducts } from "@/lib/actions/products"
+import type { Product } from "@/types"
 
-export default async function FavoritesPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default function FavoritesPage() {
+  const [favorites, setFavorites] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const [, startTransition] = useTransition()
 
-  if (!user) return null
+  useEffect(() => {
+    getFavoriteProducts().then((prods) => {
+      setFavorites(prods)
+      setLoading(false)
+    })
+  }, [])
 
-  const payload = await getPayload({ config: configPromise })
-  const { docs: favDocs } = await payload.find({
-    collection: "favorites",
-    where: { clientId: { equals: user.id } },
-    depth: 2,
-    limit: 200,
-  })
+  function handleRemove(productId: string) {
+    setRemovingId(productId)
+    startTransition(async () => {
+      await toggleFavorite(productId)
+      setFavorites((prev) => prev.filter((p) => p.id !== productId))
+      setRemovingId(null)
+    })
+  }
 
-  // Transform favorites with product data
-  const favorites = favDocs.map((fav: any) => {
-    const product = typeof fav.product === "object" ? fav.product : null
-    const coffee = product?.coffeeDetails || {}
-    const imageEntry = product?.images?.[0]
-    const imageUrl = imageEntry?.image?.url || imageEntry?.image?.sizes?.card?.url || null
-
-    return {
-      id: fav.id,
-      productId: product?.id,
-      name: product?.name || "Товар",
-      region: coffee.region || null,
-      productType: product?.productType || "",
-      imageUrl,
-    }
-  })
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -58,32 +57,42 @@ export default async function FavoritesPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {favorites.map((fav) => (
+          {favorites.map((product) => (
             <div
-              key={fav.id}
+              key={product.id}
               className="flex items-center gap-4 p-4 border rounded-xl hover:bg-muted/50 transition-colors"
             >
-              {/* Thumbnail */}
-              <div className="h-12 w-12 rounded-lg bg-coffee-50 flex items-center justify-center shrink-0 overflow-hidden">
-                {fav.imageUrl ? (
-                  <img src={fav.imageUrl} alt={fav.name} className="h-full w-full object-cover" />
+              <div className="h-12 w-12 rounded-lg bg-[#faead5] flex items-center justify-center shrink-0 overflow-hidden">
+                {product.images && product.images.length > 0 ? (
+                  <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
                 ) : (
-                  <Coffee className="h-5 w-5 text-coffee-200" />
+                  <Coffee className="h-5 w-5 text-[#5b328a]/30" />
                 )}
               </div>
 
               <div className="flex-1 min-w-0">
                 <Link
-                  href={`/dashboard/product/${fav.productId}`}
+                  href={`/dashboard/product/${product.id}`}
                   className="font-medium hover:text-primary transition-colors"
                 >
-                  {fav.name}
+                  {product.name}
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  {fav.region || fav.productType}
+                  {product.region || product.product_type}
                 </p>
               </div>
-              <Heart className="h-4 w-4 fill-red-500 text-red-500 shrink-0" />
+
+              <button
+                onClick={() => handleRemove(product.id)}
+                disabled={removingId === product.id}
+                className="shrink-0 p-2 rounded-full hover:bg-red-50 transition-colors group"
+              >
+                {removingId === product.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <Heart className="h-4 w-4 fill-red-500 text-red-500 group-hover:fill-red-400 group-hover:text-red-400 transition-colors" />
+                )}
+              </button>
             </div>
           ))}
         </div>

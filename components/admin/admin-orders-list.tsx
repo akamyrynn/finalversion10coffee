@@ -129,7 +129,12 @@ export function AdminOrdersList({ initialOrders }: AdminOrdersListProps) {
                     </Select>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {DELIVERY_METHOD_LABELS[order.delivery_method]}
+                    <div>{DELIVERY_METHOD_LABELS[order.delivery_method]}</div>
+                    {(order.cdek_tracking_number || order.cap_2000_tracking_number) && (
+                      <div className="text-xs font-mono text-[#5b328a] mt-0.5">
+                        {order.cdek_tracking_number || order.cap_2000_tracking_number}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     {formatPrice(order.total)}

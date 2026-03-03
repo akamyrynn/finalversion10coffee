@@ -56,7 +56,7 @@ export function CategoryProductList({
 
   if (products.length === 0) {
     return (
-      <p className="text-sm text-coffee-400 py-4 pl-1 italic">
+      <p className="text-sm text-[#2d1b11]/50 py-4 pl-1 italic">
         Товары скоро появятся
       </p>
     )

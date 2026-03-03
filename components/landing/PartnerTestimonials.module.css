@@ -39,10 +39,10 @@
   height: 80px;
   border: none;
   border-radius: 50%;
-  background: var(--base-100);
+  background: var(--accent-purple);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--base-500);
+  color: #ffffff;
   cursor: pointer;
   transition: opacity 0.3s, transform 0.2s ease;
 }
@@ -64,6 +64,8 @@
   cursor: grab;
   touch-action: none;
   will-change: transform, opacity;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .card {
@@ -74,7 +76,7 @@
   min-height: 380px;
   padding: 2.5rem;
   border-radius: 0.35rem;
-  background-color: var(--base-100);
+  background-color: var(--card-bg);
   will-change: transform;
 }
 
@@ -94,7 +96,7 @@
 .cardContent p {
   font-weight: 450;
   line-height: 1.5;
-  color: var(--base-500);
+  color: var(--card-fg);
 }
 
 .author {
@@ -125,7 +127,7 @@
 .authorName {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--base-500);
+  color: var(--card-fg);
   text-transform: none;
   line-height: 1.2;
 }
@@ -154,10 +156,26 @@
   }
 
   .card {
-    width: 100%;
+    width: 85vw;
+    min-height: 300px;
+    padding: 2rem;
   }
 
   .cardContent {
     gap: 0;
+  }
+
+  .quoteMark {
+    font-size: 2.5rem;
+  }
+
+  .navBtn {
+    width: 56px;
+    height: 56px;
+    font-size: 1.2rem;
+  }
+
+  .carousel {
+    padding: 0 1rem 3rem 1rem;
   }
 }

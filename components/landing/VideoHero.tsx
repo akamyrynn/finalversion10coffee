@@ -12,9 +12,8 @@ export default function VideoHero() {
           muted
           loop
           playsInline
-          poster="/landing/hero-poster.jpg"
         >
-          <source src="/landing/hero-video.mp4" type="video/mp4" />
+          <source src="/video_bg_0.mp4" type="video/mp4" />
         </video>
       </div>
 
@@ -22,20 +21,10 @@ export default function VideoHero() {
 
       <div className={styles.heroContainer}>
         <Copy type="words" animateOnScroll={false} delay={0.85}>
-          <h1>
-            <span>Мы не делаем</span>
-            <br />
-            <span>шаблонов</span>
-          </h1>
+          <h2>Мы не делаем шаблонов</h2>
         </Copy>
-      </div>
-
-      <div className={styles.heroFooter}>
-        <Copy type="lines" animateOnScroll={false} delay={1.1}>
-          <p className="sm">Кофе для бизнеса</p>
-        </Copy>
-        <Copy type="lines" animateOnScroll={false} delay={1.2}>
-          <p className="sm">Свой уникальный продукт</p>
+        <Copy type="words" animateOnScroll={false} delay={1.1}>
+          <p className={styles.heroSub}>Мы делаем уникальный продукт</p>
         </Copy>
       </div>
     </section>

@@ -4,8 +4,9 @@ export const Clients: CollectionConfig = {
   slug: "clients",
   admin: {
     useAsTitle: "fullName",
-    group: "Пользователи",
+    group: "Клиенты",
     description: "Клиенты платформы",
+    listSearchableFields: ["fullName", "email", "phone"],
     defaultColumns: ["fullName", "email", "phone", "createdAt"],
   },
   labels: {
@@ -13,24 +14,7 @@ export const Clients: CollectionConfig = {
     plural: "Клиенты",
   },
   fields: [
-    {
-      name: "fullName",
-      type: "text",
-      label: "ФИО",
-      required: true,
-    },
-    {
-      name: "email",
-      type: "email",
-      label: "Email",
-      required: true,
-      unique: true,
-    },
-    {
-      name: "phone",
-      type: "text",
-      label: "Телефон",
-    },
+    // === Sidebar ===
     {
       name: "supabaseId",
       type: "text",
@@ -41,31 +25,127 @@ export const Clients: CollectionConfig = {
       },
     },
     {
-      name: "companies",
-      type: "array",
-      label: "Компании",
-      fields: [
-        { name: "name", type: "text", label: "Название" },
-        { name: "inn", type: "text", label: "ИНН" },
-        { name: "kpp", type: "text", label: "КПП" },
-        { name: "ogrn", type: "text", label: "ОГРН" },
-        { name: "legalAddress", type: "text", label: "Юр. адрес" },
-        { name: "bankName", type: "text", label: "Банк" },
-        { name: "bik", type: "text", label: "БИК" },
-        { name: "settlementAccount", type: "text", label: "Расч. счёт" },
-        { name: "correspondentAccount", type: "text", label: "Корр. счёт" },
-      ],
-    },
-    // Join field — shows all orders related to this client
-    {
-      name: "orders",
-      type: "join",
-      collection: "orders",
-      on: "client",
-      label: "Заказы клиента",
+      name: "isVerified",
+      type: "checkbox",
+      label: "Верифицирован",
+      defaultValue: false,
       admin: {
-        description: "Все заказы этого клиента",
+        position: "sidebar",
       },
+    },
+
+    // === Main content (tabs) ===
+    {
+      type: "tabs",
+      tabs: [
+        {
+          label: "Контакты",
+          fields: [
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "fullName",
+                  type: "text",
+                  label: "ФИО",
+                  required: true,
+                  admin: { width: "40%" },
+                },
+                {
+                  name: "email",
+                  type: "email",
+                  label: "Email",
+                  required: true,
+                  unique: true,
+                  admin: { width: "30%" },
+                },
+                {
+                  name: "phone",
+                  type: "text",
+                  label: "Телефон",
+                  admin: { width: "30%" },
+                },
+              ],
+            },
+            {
+              name: "notes",
+              type: "textarea",
+              label: "Заметки менеджера",
+              admin: {
+                description: "Видны только в админ-панели",
+              },
+            },
+          ],
+        },
+        {
+          label: "Компании",
+          fields: [
+            {
+              name: "companies",
+              type: "array",
+              label: "Компании",
+              labels: { singular: "Компания", plural: "Компании" },
+              fields: [
+                { name: "name", type: "text", label: "Название" },
+                {
+                  type: "row",
+                  fields: [
+                    { name: "inn", type: "text", label: "ИНН", admin: { width: "33%" } },
+                    { name: "kpp", type: "text", label: "КПП", admin: { width: "33%" } },
+                    { name: "ogrn", type: "text", label: "ОГРН", admin: { width: "34%" } },
+                  ],
+                },
+                { name: "legalAddress", type: "text", label: "Юр. адрес" },
+                {
+                  type: "collapsible",
+                  label: "Банковские реквизиты",
+                  admin: { initCollapsed: true },
+                  fields: [
+                    { name: "bankName", type: "text", label: "Банк" },
+                    {
+                      type: "row",
+                      fields: [
+                        { name: "bik", type: "text", label: "БИК", admin: { width: "33%" } },
+                        { name: "settlementAccount", type: "text", label: "Расч. счёт", admin: { width: "33%" } },
+                        { name: "correspondentAccount", type: "text", label: "Корр. счёт", admin: { width: "34%" } },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Заказы",
+          fields: [
+            {
+              name: "orders",
+              type: "join",
+              collection: "orders",
+              on: "client",
+              label: "Заказы клиента",
+              admin: {
+                description: "Все заказы этого клиента",
+              },
+            },
+          ],
+        },
+        {
+          label: "Промокоды",
+          fields: [
+            {
+              name: "issuePromo",
+              type: "ui",
+              admin: {
+                components: {
+                  Field: "/payload/components/IssuePromoButton",
+                },
+              },
+            },
+          ],
+        },
+      ],
     },
   ],
   access: {

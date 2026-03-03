@@ -91,23 +91,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-2 md:p-3">
-      <div className="bg-[#f5f4f0] rounded-[22px] min-h-[calc(100vh-1.5rem)] overflow-hidden shadow-sm flex flex-col relative">
+    <div className="min-h-screen bg-white p-2 md:p-3">
+      <div className="bg-white rounded-[22px] min-h-[calc(100vh-1.5rem)] overflow-hidden shadow-sm flex flex-col relative">
 
         {/* ── TOP NAV BAR ── */}
-        <header className="flex items-center justify-between h-16 px-5 shrink-0 z-30 relative">
+        <header className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-5 shrink-0 z-30 relative">
           {/* Left: Logo */}
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
-              <Coffee className="h-4.5 w-4.5 text-coffee-950" />
-            </div>
-            <span className="text-[15px] font-black tracking-tight text-neutral-900 hidden sm:block">
-              10COFFEE
-            </span>
+            <img src="/logo.svg" alt="10coffee" className="h-5 w-auto" />
           </Link>
 
           {/* Center: Tab Switcher */}
-          <div className="flex items-center bg-coffee-950 rounded-full p-1 gap-0.5">
+          <div className="flex items-center bg-[#5b328a] rounded-full p-1 gap-0.5">
             <Link
               href="/dashboard"
               className={cn(
@@ -140,11 +135,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "h-9 w-9 rounded-xl flex items-center justify-center transition-all",
                 activePanel === "favorites"
-                  ? "bg-red-50 text-red-500"
-                  : "text-neutral-400 hover:text-red-500 hover:bg-red-50/50"
+                  ? "bg-[#faead5] text-[#e6610d]"
+                  : "text-neutral-400 hover:text-[#e6610d] hover:bg-[#faead5]/50"
               )}
             >
-              <Heart className={cn("h-[18px] w-[18px]", activePanel === "favorites" && "fill-red-500")} />
+              <Heart className={cn("h-[18px] w-[18px]", activePanel === "favorites" && "fill-[#e6610d]")} />
             </button>
 
             {/* Notifications */}
@@ -153,7 +148,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               className={cn(
                 "relative h-9 w-9 rounded-xl flex items-center justify-center transition-all",
                 activePanel === "notifications"
-                  ? "bg-violet-50 text-violet-600"
+                  ? "bg-[#faead5] text-[#5b328a]"
                   : "text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100"
               )}
             >
@@ -161,7 +156,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               {badgeVisible && (
                 <span
                   className={cn(
-                    "absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-0.5 transition-all duration-300",
+                    "absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#e6610d] text-white text-[9px] font-bold px-0.5 transition-all duration-300",
                     badgeAnimatingOut ? "opacity-0 scale-0" : "opacity-100 scale-100"
                   )}
                 >
@@ -177,7 +172,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full hover:bg-black/[0.04] pl-2 pr-1 py-1 transition-colors">
                   <span className="text-[13px] font-medium text-neutral-600 hidden sm:block">{displayName}</span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-gold-400 to-gold-600 text-coffee-950 text-[11px] font-bold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e6610d] text-white text-[11px] font-bold">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 </button>
@@ -197,7 +192,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => signOut()}
-                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                  className="text-[#e6610d] focus:text-[#e6610d] cursor-pointer"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Выйти
@@ -233,7 +228,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                           : "text-neutral-500 hover:text-neutral-900 hover:bg-white/60"
                       )}
                     >
-                      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-coffee-600" : "text-neutral-300")} />
+                      <Icon className={cn("h-4 w-4 shrink-0", active ? "text-[#5b328a]" : "text-neutral-300")} />
                       {item.label}
                     </Link>
                   )
@@ -295,7 +290,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
           {/* Main content */}
           <main className="flex-1 min-w-0 overflow-y-auto">
-            <div className="p-5 md:p-6">
+            <div className="p-3 sm:p-5 md:p-6 pb-20 lg:pb-6">
               {children}
             </div>
           </main>
@@ -318,21 +313,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               />
 
               {/* Panel */}
-              <div className="absolute top-0 right-0 bottom-0 w-full max-w-[520px] bg-white z-50 shadow-2xl shadow-black/20 animate-slide-in-right flex flex-col rounded-l-2xl">
+              <div className="absolute top-0 right-0 bottom-0 w-full sm:max-w-[520px] bg-white z-50 shadow-2xl shadow-black/20 animate-slide-in-right flex flex-col sm:rounded-l-2xl">
                 {/* Panel header */}
                 <div className="flex items-center justify-between px-6 h-16 border-b border-neutral-100 shrink-0">
                   <div className="flex items-center gap-3">
                     {activePanel === "favorites" ? (
                       <>
-                        <div className="h-9 w-9 rounded-xl bg-red-50 flex items-center justify-center">
-                          <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                        <div className="h-9 w-9 rounded-xl bg-[#faead5] flex items-center justify-center">
+                          <Heart className="h-4 w-4 text-[#e6610d] fill-[#e6610d]" />
                         </div>
                         <h2 className="text-[15px] font-bold text-neutral-900">Избранное</h2>
                       </>
                     ) : (
                       <>
-                        <div className="h-9 w-9 rounded-xl bg-violet-50 flex items-center justify-center">
-                          <Bell className="h-4 w-4 text-violet-600" />
+                        <div className="h-9 w-9 rounded-xl bg-[#faead5] flex items-center justify-center">
+                          <Bell className="h-4 w-4 text-[#5b328a]" />
                         </div>
                         <div>
                           <h2 className="text-[15px] font-bold text-neutral-900">Уведомления</h2>
@@ -348,7 +343,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     {activePanel === "notifications" && unreadCount > 0 && (
                       <button
                         onClick={markAllAsRead}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#5b328a] bg-[#faead5] hover:bg-[#faead5]/80 transition-colors"
                       >
                         <CheckCheck className="h-3.5 w-3.5" />
                         Прочитать все
@@ -375,6 +370,52 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </>
           )}
         </div>
+
+        {/* ── MOBILE BOTTOM NAV ── */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-neutral-100 px-2 pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-center justify-around h-14">
+            <Link
+              href="/dashboard"
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
+                pathname === "/dashboard" ? "text-[#5b328a]" : "text-neutral-400"
+              )}
+            >
+              <Package className="h-5 w-5" />
+              <span className="text-[10px] font-medium">Заказы</span>
+            </Link>
+            <Link
+              href="/dashboard/catalog"
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
+                isCatalog ? "text-[#5b328a]" : "text-neutral-400"
+              )}
+            >
+              <Coffee className="h-5 w-5" />
+              <span className="text-[10px] font-medium">Каталог</span>
+            </Link>
+            <Link
+              href="/dashboard/companies"
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
+                pathname.startsWith("/dashboard/companies") ? "text-[#5b328a]" : "text-neutral-400"
+              )}
+            >
+              <Building2 className="h-5 w-5" />
+              <span className="text-[10px] font-medium">Компании</span>
+            </Link>
+            <Link
+              href="/dashboard/settings"
+              className={cn(
+                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
+                pathname === "/dashboard/settings" ? "text-[#5b328a]" : "text-neutral-400"
+              )}
+            >
+              <Settings className="h-5 w-5" />
+              <span className="text-[10px] font-medium">Настройки</span>
+            </Link>
+          </div>
+        </nav>
       </div>
     </div>
   )
@@ -385,7 +426,7 @@ function FavoritesContent({ favorites, loading, onClose }: { favorites: Product[
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 rounded-full border-2 border-coffee-200 border-t-coffee-600 animate-spin" />
+        <div className="h-8 w-8 rounded-full border-2 border-[#faead5] border-t-[#5b328a] animate-spin" />
       </div>
     )
   }
@@ -393,8 +434,8 @@ function FavoritesContent({ favorites, loading, onClose }: { favorites: Product[
   if (favorites.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-        <div className="h-16 w-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
-          <Heart className="h-7 w-7 text-red-200" />
+        <div className="h-16 w-16 rounded-2xl bg-[#faead5] flex items-center justify-center mb-4">
+          <Heart className="h-7 w-7 text-[#e6610d]/40" />
         </div>
         <p className="text-sm font-semibold text-neutral-900">Нет избранных</p>
         <p className="text-[12px] text-neutral-400 mt-1">Нажмите на сердечко, чтобы сохранить товар</p>
@@ -413,15 +454,15 @@ function FavoritesContent({ favorites, loading, onClose }: { favorites: Product[
             onClick={onClose}
             className="flex items-center gap-4 p-3 rounded-xl hover:bg-neutral-50 transition-colors group"
           >
-            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-coffee-50 to-neutral-50 flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="h-14 w-14 rounded-xl bg-[#faead5] flex items-center justify-center shrink-0 overflow-hidden">
               {imageUrl ? (
                 <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
               ) : (
-                <Coffee className="h-5 w-5 text-coffee-200" />
+                <Coffee className="h-5 w-5 text-[#e6610d]/30" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-neutral-900 group-hover:text-coffee-700 transition-colors">{product.name}</p>
+              <p className="text-[13px] font-bold text-neutral-900 group-hover:text-[#5b328a] transition-colors">{product.name}</p>
               {product.region && (
                 <p className="text-[11px] text-neutral-400 mt-0.5">{product.region}</p>
               )}
@@ -431,7 +472,7 @@ function FavoritesContent({ favorites, loading, onClose }: { favorites: Product[
                 </p>
               )}
             </div>
-            <Heart className="h-4 w-4 fill-red-500 text-red-500 shrink-0" />
+            <Heart className="h-4 w-4 fill-[#e6610d] text-[#e6610d] shrink-0" />
           </Link>
         )
       })}
@@ -447,9 +488,9 @@ const notifIcons: Record<NotificationType, typeof Bell> = {
 }
 
 const notifColors: Record<NotificationType, string> = {
-  order_update: "bg-amber-50 text-amber-600",
-  news: "bg-emerald-50 text-emerald-600",
-  product_restock: "bg-blue-50 text-blue-600",
+  order_update: "bg-[#faead5] text-[#e6610d]",
+  news: "bg-[#faead5] text-[#5b328a]",
+  product_restock: "bg-[#faead5] text-[#5b328a]",
 }
 
 function NotificationsContent({

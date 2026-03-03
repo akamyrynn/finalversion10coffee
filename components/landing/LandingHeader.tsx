@@ -26,43 +26,52 @@ export default function LandingHeader({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToMap = () => {
-    const el = document.getElementById("where-to-try");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <nav
-      className={`${styles.navBar} ${isCompact ? styles.navBarCompact : ""}`}
-    >
-      {/* Logo — collapses in compact mode */}
-      <div
-        className={`${styles.navLeft} ${isCompact ? styles.hideOnCompact : ""}`}
+    <>
+      {/* Left navbar — logo + links + burger */}
+      <nav
+        className={`${styles.navBar} ${isCompact ? styles.navBarCompact : ""}`}
       >
-        <a href="/" className={styles.navLogo}>
-          10coffee
-        </a>
-      </div>
-
-      {/* Center links — collapses in compact mode */}
-      <div
-        className={`${styles.navCenter} ${isCompact ? styles.hideOnCompact : ""}`}
-      >
-        <button type="button" className={styles.navLink} onClick={scrollToMap}>
-          Где попробовать
-        </button>
-        <a
-          href="https://10cofshop.vercel.app/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.navLink}
+        <div
+          className={`${styles.navLeft} ${isCompact ? styles.hideOnCompact : ""}`}
         >
-          Интернет-магазин
-        </a>
-      </div>
+          <a href="/" className={styles.navLogo}>
+            <img src="/logo.svg" alt="10coffee" className={styles.navLogoImg} />
+          </a>
+        </div>
 
-      {/* Right side — always visible */}
-      <div className={styles.navRight}>
+        <div
+          className={`${styles.navCenter} ${isCompact ? styles.hideOnCompact : ""}`}
+        >
+          <button type="button" className={styles.navLink} title="Скоро" onClick={() => {}}>
+            Где попробовать
+          </button>
+          <a
+            href="https://10cofshop.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.navLink}
+          >
+            Интернет-магазин
+          </a>
+        </div>
+
+        <button
+          type="button"
+          className={`${styles.burger} ${isMenuOpen ? styles.burgerOpen : ""}`}
+          onClick={onToggleMenu}
+          aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}
+        >
+          <span className={styles.burgerLine} />
+          <span className={styles.burgerLine} />
+          <span className={styles.burgerLine} />
+        </button>
+      </nav>
+
+      {/* Right side — ЛК / profile */}
+      <div
+        className={`${styles.navRight} ${isCompact ? styles.navRightCompact : ""}`}
+      >
         {user ? (
           <a href="/dashboard" className={styles.navAvatar}>
             {user.user_metadata?.full_name?.[0]?.toUpperCase() ||
@@ -78,19 +87,7 @@ export default function LandingHeader({
             {isCompact ? "ЛК" : "Личный кабинет"}
           </button>
         )}
-
-        {/* Burger — circle with 3 lines */}
-        <button
-          type="button"
-          className={`${styles.burger} ${isMenuOpen ? styles.burgerOpen : ""}`}
-          onClick={onToggleMenu}
-          aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}
-        >
-          <span className={styles.burgerLine} />
-          <span className={styles.burgerLine} />
-          <span className={styles.burgerLine} />
-        </button>
       </div>
-    </nav>
+    </>
   );
 }

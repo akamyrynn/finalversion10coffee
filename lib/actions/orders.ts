@@ -206,6 +206,49 @@ export async function repeatOrder(orderId: string) {
   return { success: true }
 }
 
+export async function setTrackingNumber(
+  orderId: string,
+  trackingNumber: string,
+  carrier: "cdek" | "cap_2000"
+) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { error: "Не авторизован" }
+
+  const field =
+    carrier === "cdek" ? "cdek_tracking_number" : "cap_2000_tracking_number"
+
+  const { error } = await supabase
+    .from("orders")
+    .update({ [field]: trackingNumber })
+    .eq("id", orderId)
+
+  if (error) return { error: error.message }
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("client_id, order_number")
+    .eq("id", orderId)
+    .single()
+
+  if (order) {
+    const carrierName = carrier === "cdek" ? "СДЭК" : "ЦАП-2000"
+    await supabase.from("notifications").insert({
+      client_id: order.client_id,
+      type: "order_update",
+      title: "Трек-номер присвоен",
+      message: `Заказ #${order.order_number} отправлен через ${carrierName}. Трек: ${trackingNumber}`,
+      data: { order_id: orderId },
+    })
+  }
+
+  revalidatePath("/dashboard")
+  return { success: true }
+}
+
 // Admin actions
 export async function getAllOrders(filters?: {
   status?: OrderStatus

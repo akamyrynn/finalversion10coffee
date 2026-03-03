@@ -14,12 +14,10 @@ export default function LetsConnect() {
   const circlePathRef = useRef<SVGPathElement>(null);
 
   useEffect(() => {
-    const section = sectionRef.current;
     const circlePath = circlePathRef.current;
-    if (!section || !circlePath) return;
+    if (!circlePath) return;
 
     const pathLength = circlePath.getTotalLength();
-    const image = section.querySelector(`.${styles.image}`);
 
     gsap.set(circlePath, {
       strokeDasharray: pathLength,
@@ -28,10 +26,8 @@ export default function LetsConnect() {
       transformOrigin: "center center",
     });
 
-    if (image) gsap.set(image, { autoAlpha: 0, scale: 0.75 });
-
     const scrollTrigger = ScrollTrigger.create({
-      trigger: section,
+      trigger: sectionRef.current,
       start: "top 75%",
       once: true,
       onEnter: () => {
@@ -41,14 +37,6 @@ export default function LetsConnect() {
           delay: 0.6,
           ease: "power2.inOut",
         });
-        if (image) {
-          gsap.to(image, {
-            autoAlpha: 1,
-            scale: 1,
-            duration: 1,
-            ease: "power3.out",
-          });
-        }
       },
     });
 
@@ -123,31 +111,27 @@ export default function LetsConnect() {
               </Copy>
             </div>
           </div>
-
-          <div className={styles.circleButton} ref={circleButtonRef}>
-            <a href="mailto:info@10coffee.ru" className={styles.button}>
-              <svg
-                className={styles.buttonSvg}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 100 100"
-              >
-                <path
-                  ref={circlePathRef}
-                  d="M50,10 A40,40 0 1,1 49.9999,10"
-                  stroke="currentColor"
-                  strokeWidth="0.75"
-                  fill="none"
-                />
-              </svg>
-              <Copy type="lines" animateOnScroll start="top 80%" delay={0.5}>
-                <span>Написать нам</span>
-              </Copy>
-            </a>
-          </div>
         </div>
 
-        <div className={styles.image}>
-          <img src="/landing/connect.jpg" alt="10coffee team" />
+        <div className={styles.circleButton} ref={circleButtonRef}>
+          <a href="mailto:info@10coffee.ru" className={styles.button}>
+            <svg
+              className={styles.buttonSvg}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 100 100"
+            >
+              <path
+                ref={circlePathRef}
+                d="M50,10 A40,40 0 1,1 49.9999,10"
+                stroke="currentColor"
+                strokeWidth="0.75"
+                fill="none"
+              />
+            </svg>
+            <Copy type="lines" animateOnScroll start="top 80%" delay={0.5}>
+              <span>Написать нам</span>
+            </Copy>
+          </a>
         </div>
       </div>
     </section>

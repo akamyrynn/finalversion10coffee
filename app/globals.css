@@ -55,23 +55,23 @@ a {
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* Premium coffee brand colors */
-  --color-coffee-50: #faf8f5;
-  --color-coffee-100: #f0ebe3;
-  --color-coffee-200: #e0d5c7;
-  --color-coffee-300: #ccb99e;
-  --color-coffee-400: #b59b78;
-  --color-coffee-500: #a08260;
-  --color-coffee-600: #8b6d4f;
-  --color-coffee-700: #6f5540;
-  --color-coffee-800: #5c4738;
-  --color-coffee-900: #4b3d33;
-  --color-coffee-950: #2a1f1a;
+  /* Brand colors — new palette */
+  --color-coffee-50: #fef7f0;
+  --color-coffee-100: #faead5;
+  --color-coffee-200: #f5d5ab;
+  --color-coffee-300: #e6610d;
+  --color-coffee-400: #cf5609;
+  --color-coffee-500: #5b328a;
+  --color-coffee-600: #5b328a;
+  --color-coffee-700: #2d1b11;
+  --color-coffee-800: #2d1b11;
+  --color-coffee-900: #1d1d1b;
+  --color-coffee-950: #1d1d1b;
 
-  --color-gold-300: #f5d881;
-  --color-gold-400: #efbf04;
-  --color-gold-500: #d4a500;
-  --color-gold-600: #b8860b;
+  --color-gold-300: #e6610d;
+  --color-gold-400: #e6610d;
+  --color-gold-500: #cf5609;
+  --color-gold-600: #cf5609;
 
   /* Animations */
   --animate-fade-in: fade-in 0.5s ease-out;
@@ -116,71 +116,37 @@ a {
 
 :root {
   --radius: 0.75rem;
-  --background: #faf8f5;
-  --foreground: #2a1f1a;
+  --background: #ffffff;
+  --foreground: #1d1d1b;
   --card: #ffffff;
-  --card-foreground: #2a1f1a;
+  --card-foreground: #1d1d1b;
   --popover: #ffffff;
-  --popover-foreground: #2a1f1a;
-  --primary: #5c4738;
-  --primary-foreground: #faf8f5;
-  --secondary: #f0ebe3;
-  --secondary-foreground: #4b3d33;
-  --muted: #f0ebe3;
-  --muted-foreground: #8b6d4f;
-  --accent: #efbf04;
-  --accent-foreground: #2a1f1a;
+  --popover-foreground: #1d1d1b;
+  --primary: #5b328a;
+  --primary-foreground: #ffffff;
+  --secondary: #faead5;
+  --secondary-foreground: #2d1b11;
+  --muted: #faead5;
+  --muted-foreground: #2d1b11;
+  --accent: #e6610d;
+  --accent-foreground: #ffffff;
   --destructive: #dc2626;
-  --border: #e0d5c7;
-  --input: #e0d5c7;
-  --ring: #a08260;
-  --chart-1: #6f5540;
-  --chart-2: #a08260;
-  --chart-3: #ccb99e;
-  --chart-4: #efbf04;
-  --chart-5: #d4a500;
-  --sidebar: #2a1f1a;
-  --sidebar-foreground: #f0ebe3;
-  --sidebar-primary: #efbf04;
-  --sidebar-primary-foreground: #2a1f1a;
-  --sidebar-accent: #3d2e24;
-  --sidebar-accent-foreground: #f0ebe3;
-  --sidebar-border: #3d2e24;
-  --sidebar-ring: #a08260;
-}
-
-.dark {
-  --background: #1a1412;
-  --foreground: #f0ebe3;
-  --card: #2a1f1a;
-  --card-foreground: #f0ebe3;
-  --popover: #2a1f1a;
-  --popover-foreground: #f0ebe3;
-  --primary: #efbf04;
-  --primary-foreground: #2a1f1a;
-  --secondary: #3d2e24;
-  --secondary-foreground: #f0ebe3;
-  --muted: #3d2e24;
-  --muted-foreground: #b59b78;
-  --accent: #efbf04;
-  --accent-foreground: #2a1f1a;
-  --destructive: #ef4444;
-  --border: rgba(255,255,255,0.1);
-  --input: rgba(255,255,255,0.15);
-  --ring: #a08260;
-  --chart-1: #efbf04;
-  --chart-2: #a08260;
-  --chart-3: #ccb99e;
-  --chart-4: #b59b78;
-  --chart-5: #d4a500;
-  --sidebar: #1a1412;
-  --sidebar-foreground: #f0ebe3;
-  --sidebar-primary: #efbf04;
-  --sidebar-primary-foreground: #2a1f1a;
-  --sidebar-accent: #3d2e24;
-  --sidebar-accent-foreground: #f0ebe3;
-  --sidebar-border: rgba(255,255,255,0.1);
-  --sidebar-ring: #a08260;
+  --border: rgba(29, 29, 27, 0.08);
+  --input: rgba(29, 29, 27, 0.08);
+  --ring: #5b328a;
+  --chart-1: #5b328a;
+  --chart-2: #e6610d;
+  --chart-3: #faead5;
+  --chart-4: #2d1b11;
+  --chart-5: #1d1d1b;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1d1d1b;
+  --sidebar-primary: #5b328a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #faead5;
+  --sidebar-accent-foreground: #2d1b11;
+  --sidebar-border: rgba(29, 29, 27, 0.08);
+  --sidebar-ring: #5b328a;
 }
 
 @layer base {
@@ -200,9 +166,9 @@ a {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-coffee-300);
+  background: rgba(91, 50, 138, 0.3);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-coffee-400);
+  background: rgba(91, 50, 138, 0.5);
 }

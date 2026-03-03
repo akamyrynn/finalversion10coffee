@@ -1,14 +1,26 @@
 /* ===== Color variables (normal specificity — stays on the scope element) ===== */
 .landing-scope {
-  --base-100: #e0ded1;
-  --base-200: #a6a49a;
-  --base-300: #615558;
-  --base-400: #40373a;
-  --base-500: #231f20;
-  --base-600: #171415;
+  --base-100: #1d1d1b;
+  --base-200: #2d1b11;
+  --base-300: #5b328a;
+  --base-400: #faead5;
+  --base-500: #ffffff;
+  --base-600: #ffffff;
+
+  /* Named accent aliases */
+  --accent-orange: #e6610d;
+  --accent-purple: #5b328a;
+  --accent-cream: #faead5;
+
+  /* Inverted tokens for buttons/cards that need reversed fg/bg */
+  --btn-bg: #5b328a;
+  --btn-fg: #ffffff;
+  --card-bg: #faead5;
+  --card-fg: #1d1d1b;
+  --card-fg-muted: #2d1b11;
 
   overflow-x: clip;
-  background-color: #000;
+  background-color: #ffffff;
   color: var(--base-100);
 }
 
@@ -85,7 +97,7 @@
 }
 
 :where(.landing-scope) :where(p.mono) {
-  font-family: var(--font-google-sans), monospace;
+  font-family: var(--font-google-sans), sans-serif;
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 0.9;

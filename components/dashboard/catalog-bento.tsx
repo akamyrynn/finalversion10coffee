@@ -53,18 +53,18 @@ const filterLabels: Record<FilterMode, string> = {
 }
 
 const cardColors = [
-  "from-amber-50 to-orange-50",
-  "from-blue-50 to-indigo-50",
-  "from-emerald-50 to-green-50",
-  "from-rose-50 to-pink-50",
-  "from-violet-50 to-purple-50",
-  "from-amber-50 to-yellow-50",
-  "from-cyan-50 to-sky-50",
-  "from-fuchsia-50 to-pink-50",
-  "from-lime-50 to-emerald-50",
-  "from-teal-50 to-cyan-50",
-  "from-orange-50 to-red-50",
-  "from-indigo-50 to-blue-50",
+  "bg-[#faead5]",
+  "bg-[#faead5]/80",
+  "bg-[#faead5]/60",
+  "bg-[#faead5]",
+  "bg-[#faead5]/80",
+  "bg-[#faead5]/60",
+  "bg-[#faead5]",
+  "bg-[#faead5]/80",
+  "bg-[#faead5]/60",
+  "bg-[#faead5]",
+  "bg-[#faead5]/80",
+  "bg-[#faead5]/60",
 ]
 
 export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
@@ -115,8 +115,8 @@ export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
   return (
     <div className="space-y-5">
       {/* Type pills */}
-      <div className="flex items-center gap-2">
-        <span className="text-[11px] font-bold text-neutral-300 mr-2 tracking-[0.15em] uppercase">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <span className="text-[11px] font-bold text-neutral-300 mr-2 tracking-[0.15em] uppercase shrink-0 hidden sm:block">
           Каталог
         </span>
         {typeTabs.map((t) => (
@@ -130,7 +130,7 @@ export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
             className={cn(
               "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-300",
               activeType === t.value
-                ? "bg-coffee-950 text-white shadow-md shadow-coffee-950/10"
+                ? "bg-[#5b328a] text-white shadow-md shadow-[#5b328a]/10"
                 : "bg-white/80 text-neutral-500 hover:text-neutral-900 hover:bg-white hover:shadow-sm"
             )}
           >
@@ -222,7 +222,7 @@ export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
           </h2>
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="h-8 w-8 rounded-full border-2 border-coffee-200 border-t-coffee-600 animate-spin" />
+              <div className="h-8 w-8 rounded-full border-2 border-[#faead5] border-t-[#5b328a] animate-spin" />
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-20">
@@ -230,7 +230,7 @@ export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
               <p className="text-neutral-400 text-sm">Товары скоро появятся</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {products.map((p: any, i: number) => (
                 <ProdCard key={p.id} product={p} idx={i} />
               ))}
@@ -257,11 +257,10 @@ export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
                     setExpandedName(cat.name)
                   }}
                   className={cn(
-                    "text-left rounded-2xl aspect-[3/4] flex flex-col group transition-all duration-300 hover:shadow-xl hover:shadow-coffee-200/30 hover:-translate-y-1 active:scale-[0.97] border border-black/[0.02] overflow-hidden relative",
+                    "text-left rounded-2xl aspect-[3/4] flex flex-col group transition-all duration-300 hover:shadow-xl hover:shadow-[#5b328a]/10 hover:-translate-y-1 active:scale-[0.97] border border-black/[0.02] overflow-hidden relative",
                     catImageUrl
                       ? "bg-neutral-900"
-                      : "bg-gradient-to-br p-6 " +
-                          cardColors[i % cardColors.length]
+                      : "p-6 " + cardColors[i % cardColors.length]
                   )}
                 >
                   {catImageUrl ? (
@@ -416,7 +415,7 @@ function ListCategorySection({
         <div className="pb-4">
           {loading ? (
             <div className="py-6 flex justify-center">
-              <div className="h-6 w-6 rounded-full border-2 border-coffee-200 border-t-coffee-600 animate-spin" />
+              <div className="h-6 w-6 rounded-full border-2 border-[#faead5] border-t-[#5b328a] animate-spin" />
             </div>
           ) : filteredAndSorted.length === 0 ? (
             <div className="py-4 text-[12px] text-neutral-400 px-1">
@@ -433,7 +432,7 @@ function ListCategorySection({
                   <div className="text-center text-[10px] font-bold text-neutral-400 tracking-wider uppercase pb-1 px-2 border-b-2 border-neutral-200 min-w-[200px]">
                     Упаковка 250 г
                   </div>
-                  <div className="text-center text-[10px] font-bold text-neutral-400 tracking-wider uppercase pb-1 px-2 border-b-2 border-coffee-300 min-w-[200px]">
+                  <div className="text-center text-[10px] font-bold text-neutral-400 tracking-wider uppercase pb-1 px-2 border-b-2 border-[#5b328a] min-w-[200px]">
                     Упаковка 1 кг
                   </div>
                 </div>
@@ -493,13 +492,13 @@ function ProdCard({ product, idx }: { product: any; idx: number }) {
 
   return (
     <div
-      className="group bg-white rounded-[18px] overflow-hidden flex flex-col border border-black/[0.03] hover:shadow-xl hover:shadow-coffee-200/20 transition-all duration-400 hover:-translate-y-1 animate-fade-in-up"
+      className="group bg-white rounded-[18px] overflow-hidden flex flex-col border border-black/[0.03] hover:shadow-xl hover:shadow-[#5b328a]/10 transition-all duration-400 hover:-translate-y-1 animate-fade-in-up"
       style={{
         animationDelay: `${idx * 60}ms`,
         animationFillMode: "backwards",
       }}
     >
-      <div className="aspect-square bg-gradient-to-br from-coffee-50 to-neutral-50 flex items-center justify-center overflow-hidden relative">
+      <div className="aspect-square bg-gradient-to-br bg-[#faead5] flex items-center justify-center overflow-hidden relative">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -511,7 +510,7 @@ function ProdCard({ product, idx }: { product: any; idx: number }) {
         )}
         {product.q_grader_rating && (
           <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full">
-            <Star className="h-2.5 w-2.5 text-gold-400 fill-gold-400" />
+            <Star className="h-2.5 w-2.5 text-[#e6610d] fill-[#e6610d]" />
             <span className="text-[10px] font-bold text-white">
               Q{product.q_grader_rating}
             </span>
@@ -527,10 +526,10 @@ function ProdCard({ product, idx }: { product: any; idx: number }) {
               className={cn(
                 "text-[9px] font-bold px-2 py-0.5 rounded-full",
                 s === "new"
-                  ? "bg-emerald-100 text-emerald-700"
+                  ? "bg-[#faead5] text-[#5b328a]"
                   : s === "popular"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-red-100 text-red-700"
+                    ? "bg-[#faead5] text-[#e6610d]"
+                    : "bg-[#faead5] text-[#e6610d]"
               )}
             >
               {s === "new"
@@ -548,7 +547,7 @@ function ProdCard({ product, idx }: { product: any; idx: number }) {
           href={`/dashboard/product/${product.id}`}
           className="flex-1 min-w-0"
         >
-          <h4 className="text-[13px] font-bold text-neutral-900 leading-tight group-hover:text-coffee-700 transition-colors">
+          <h4 className="text-[13px] font-bold text-neutral-900 leading-tight group-hover:text-[#5b328a] transition-colors">
             {product.name}
           </h4>
           {product.region && (
@@ -573,8 +572,8 @@ function ProdCard({ product, idx }: { product: any; idx: number }) {
               className={cn(
                 "h-9 w-9 rounded-full flex items-center justify-center transition-all duration-300",
                 added
-                  ? "bg-emerald-500 text-white scale-110 shadow-lg shadow-emerald-500/30"
-                  : "bg-coffee-950 text-white hover:bg-coffee-800 hover:shadow-md active:scale-90"
+                  ? "bg-[#5b328a] text-white scale-110 shadow-lg shadow-[#5b328a]/30"
+                  : "bg-[#5b328a] text-white hover:bg-[#4a2870] hover:shadow-md active:scale-90"
               )}
             >
               {added ? (

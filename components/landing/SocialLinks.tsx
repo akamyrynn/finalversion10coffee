@@ -1,6 +1,7 @@
 "use client";
 
 import { FaTelegram, FaInstagram, FaVk } from "react-icons/fa";
+import Copy from "./_shared/Copy";
 import styles from "./SocialLinks.module.css";
 
 const SOCIALS = [
@@ -13,18 +14,25 @@ export default function SocialLinks() {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        {SOCIALS.map((social) => (
-          <a
-            key={social.label}
-            href={social.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.link}
-          >
-            <social.icon />
-            {social.label}
-          </a>
-        ))}
+        <Copy type="words" animateOnScroll>
+          <h5 className={styles.heading}>Мы в соцсетях</h5>
+        </Copy>
+        <div className={styles.links}>
+          {SOCIALS.map((social) => (
+            <a
+              key={social.label}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.link}
+            >
+              <span className={styles.iconWrap}>
+                <social.icon />
+              </span>
+              <span className={styles.label}>{social.label}</span>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
   );

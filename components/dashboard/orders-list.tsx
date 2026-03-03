@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ShoppingBag, RotateCcw, Calendar, X } from "lucide-react"
+import { ShoppingBag, RotateCcw, Calendar, X, FileText, Truck } from "lucide-react"
 import { formatPrice, formatDate, formatOrderNumber } from "@/lib/utils/format"
 import {
   ORDER_STATUS_LABELS,
@@ -98,7 +98,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-52 h-9 text-[12px] rounded-lg">
+          <SelectTrigger className="w-full sm:w-52 h-9 text-[12px] rounded-lg">
             <SelectValue placeholder="Все статусы" />
           </SelectTrigger>
           <SelectContent>
@@ -115,7 +115,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
           value={dateRange}
           onValueChange={(v) => setDateRange(v as DateRange)}
         >
-          <SelectTrigger className="w-44 h-9 text-[12px] rounded-lg">
+          <SelectTrigger className="w-full sm:w-44 h-9 text-[12px] rounded-lg">
             <Calendar className="h-3.5 w-3.5 mr-1.5 text-neutral-400" />
             <SelectValue />
           </SelectTrigger>
@@ -176,7 +176,7 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
           {!hasActiveFilters && (
             <Link
               href="/dashboard/catalog"
-              className="inline-flex items-center gap-1.5 mt-4 text-[12px] font-bold text-coffee-700 hover:text-coffee-900 transition-colors"
+              className="inline-flex items-center gap-1.5 mt-4 text-[12px] font-bold text-[#5b328a] hover:text-[#4a2870] transition-colors"
             >
               Перейти в каталог
             </Link>
@@ -187,9 +187,9 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
           {filteredOrders.map((order) => (
             <div
               key={order.id}
-              className="bg-white rounded-xl border border-black/[0.04] px-5 py-4 hover:shadow-sm transition-all"
+              className="bg-white rounded-xl border border-black/[0.04] px-4 sm:px-5 py-3 sm:py-4 hover:shadow-sm transition-all"
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-3">
                     <span className="text-[14px] font-black text-neutral-900 tabular-nums">
@@ -226,21 +226,40 @@ export function OrdersList({ initialOrders }: OrdersListProps) {
                         ` +${order.items.length - 3}`}
                     </p>
                   )}
+                  {(order.cdek_tracking_number || order.cap_2000_tracking_number) && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Truck className="h-3 w-3 text-[#5b328a]" />
+                      <span className="text-[11px] font-semibold text-[#5b328a]">
+                        Трек: {order.cdek_tracking_number || order.cap_2000_tracking_number}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right">
-                    <div className="text-[16px] font-black text-neutral-900 tabular-nums">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <div className="text-left sm:text-right">
+                    <div className="text-[15px] sm:text-[16px] font-black text-neutral-900 tabular-nums">
                       {formatPrice(order.total)}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleRepeatOrder(order.id)}
-                    className="h-8 px-3 flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 bg-neutral-100 rounded-lg hover:bg-neutral-200 hover:text-neutral-900 transition-colors"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    Повторить
-                  </button>
+                  <div className="ml-auto sm:ml-0 flex items-center gap-2">
+                    <a
+                      href={`/api/invoice?orderId=${order.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-8 px-2.5 sm:px-3 flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 bg-neutral-100 rounded-lg hover:bg-neutral-200 hover:text-neutral-900 transition-colors"
+                    >
+                      <FileText className="h-3 w-3" />
+                      <span className="hidden sm:inline">Счёт</span>
+                    </a>
+                    <button
+                      onClick={() => handleRepeatOrder(order.id)}
+                      className="h-8 px-2.5 sm:px-3 flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 bg-neutral-100 rounded-lg hover:bg-neutral-200 hover:text-neutral-900 transition-colors"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      <span className="hidden sm:inline">Повторить</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

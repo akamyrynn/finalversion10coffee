@@ -47,6 +47,14 @@
   color: var(--base-100);
 }
 
+.stickyCard:nth-child(3n + 1) h3 {
+  color: #ffffff;
+}
+
+.stickyCard:nth-child(3n + 1) p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .stickyCard p {
   max-width: 400px;
 }

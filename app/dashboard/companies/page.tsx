@@ -8,15 +8,15 @@ export default async function CompaniesPage() {
   const companies = await getClientCompanies()
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Мои компании</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Мои компании</h1>
+          <p className="text-sm text-muted-foreground">
             Управление юридическими лицами
           </p>
         </div>
-        <Button asChild>
+        <Button asChild size="sm" className="w-full sm:w-auto">
           <Link href="/dashboard/companies/new">
             <Plus className="h-4 w-4 mr-2" />
             Добавить компанию
@@ -39,7 +39,7 @@ export default async function CompaniesPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
           {companies.map((company) => (
             <Card key={company.id}>
               <CardContent className="p-5 space-y-3">

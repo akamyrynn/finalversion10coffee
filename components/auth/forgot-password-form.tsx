@@ -43,7 +43,7 @@ export function ForgotPasswordForm({ onSwitchToLogin }: ForgotPasswordFormProps)
   if (success) {
     return (
       <div className="space-y-5 text-center py-4">
-        <Mail className="h-14 w-14 text-coffee-600 mx-auto" />
+        <Mail className="h-14 w-14 text-[#5b328a] mx-auto" />
         <h2 className="text-[18px] font-black text-neutral-900">Проверьте почту</h2>
         <p className="text-[12px] text-neutral-500 max-w-sm mx-auto leading-relaxed">
           Если аккаунт с таким email существует, мы отправили инструкции по сбросу пароля.

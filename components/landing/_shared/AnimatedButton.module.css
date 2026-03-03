@@ -7,7 +7,7 @@
   padding: 1.25rem 2.75rem;
   border-radius: 0.25rem;
   text-decoration: none;
-  color: var(--base-500);
+  color: var(--btn-fg);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -16,7 +16,7 @@
   position: absolute;
   inset: 0;
   border-radius: 0.35rem;
-  background-color: var(--base-100);
+  background-color: var(--btn-bg);
   transition: transform 0.35s ease;
 }
 
@@ -47,4 +47,14 @@
   position: absolute;
   top: 0;
   left: 0;
+}
+
+@media (max-width: 1000px) {
+  .slideButton {
+    padding: 1rem 2rem;
+  }
+
+  .slideButtonText {
+    font-size: 0.9rem;
+  }
 }

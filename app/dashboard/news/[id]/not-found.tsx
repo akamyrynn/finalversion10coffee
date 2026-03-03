@@ -13,7 +13,7 @@ export default function NewsNotFound() {
       </p>
       <Link
         href="/dashboard/news"
-        className="mt-4 text-[12px] font-semibold text-coffee-700 hover:text-coffee-900 transition-colors"
+        className="mt-4 text-[12px] font-semibold text-[#5b328a] hover:text-[#4a2870] transition-colors"
       >
         Вернуться к новостям
       </Link>

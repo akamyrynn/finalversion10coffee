@@ -127,4 +127,16 @@
   .aboutImg:nth-child(4) { width: 22.5%; }
   .aboutImg:nth-child(5) { width: 15%; }
   .aboutImg:nth-child(6) { width: 20%; }
+
+  .aboutImgs {
+    height: 200svh;
+  }
+
+  .aboutImg:nth-child(3) {
+    left: 1.5rem;
+  }
+
+  .aboutImg:nth-child(5) {
+    right: 1.5rem;
+  }
 }

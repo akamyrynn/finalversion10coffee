@@ -125,7 +125,7 @@ export default function CheckoutPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
             Оформление заказа
           </h1>
           <p className="text-muted-foreground">

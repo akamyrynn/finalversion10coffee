@@ -94,7 +94,7 @@ export function LoginForm({ onSwitchToRegister, onSwitchToForgot }: LoginFormPro
           <button
             type="button"
             onClick={onSwitchToRegister}
-            className="text-coffee-700 font-semibold hover:text-coffee-900 transition-colors"
+            className="text-[#5b328a] font-semibold hover:text-[#4a2870] transition-colors"
           >
             Зарегистрироваться
           </button>

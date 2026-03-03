@@ -33,9 +33,15 @@ export async function submitPriceListRequest(
   }
 
   try {
-    // TODO: Save to Supabase table `price_list_requests`
-    // TODO: Send PDF via email
-    console.log("Price list request:", parsed.data);
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { error } = await supabase.from("price_list_requests").insert({
+      name: parsed.data.name,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      company: parsed.data.company || null,
+    });
+    if (error) throw error;
 
     return { success: true };
   } catch {

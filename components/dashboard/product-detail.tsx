@@ -35,9 +35,9 @@ interface ProductDetailProps {
 }
 
 const STICKER_STYLES: Record<string, { bg: string; label: string }> = {
-  new: { bg: "bg-emerald-500 text-white", label: "Новинка" },
-  popular: { bg: "bg-amber-500 text-white", label: "Популярное" },
-  month_discount: { bg: "bg-red-500 text-white", label: "Скидка месяца" },
+  new: { bg: "bg-[#5b328a] text-white", label: "Новинка" },
+  popular: { bg: "bg-[#e6610d] text-white", label: "Популярное" },
+  month_discount: { bg: "bg-[#e6610d] text-white", label: "Скидка месяца" },
 }
 
 export function ProductDetail({ product, isFavorite: initialFav }: ProductDetailProps) {
@@ -100,11 +100,11 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
         <span>Каталог</span>
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+      <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[1fr_1fr]">
         {/* ── LEFT: Gallery ── */}
         <div className="space-y-3">
           {/* Main image */}
-          <div className="aspect-square rounded-2xl bg-gradient-to-br from-coffee-50 to-neutral-50 overflow-hidden relative group">
+          <div className="aspect-square rounded-2xl bg-gradient-to-br bg-[#faead5] overflow-hidden relative group">
             {product.images && product.images.length > 0 ? (
               <img
                 src={product.images[activeImage] || product.images[0]}
@@ -137,7 +137,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
             {/* Q-rating badge */}
             {product.q_grader_rating && (
               <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full">
-                <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                <Star className="h-3.5 w-3.5 text-[#e6610d] fill-[#e6610d]" />
                 <span className="text-[13px] font-bold text-white">Q {product.q_grader_rating}</span>
               </div>
             )}
@@ -167,7 +167,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                   className={cn(
                     "w-16 h-16 rounded-xl overflow-hidden border-2 transition-all",
                     activeImage === i
-                      ? "border-coffee-600 shadow-md"
+                      ? "border-[#5b328a] shadow-md"
                       : "border-transparent opacity-60 hover:opacity-100"
                   )}
                 >
@@ -182,7 +182,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
         <div className="space-y-6">
           {/* Title & region */}
           <div>
-            <h1 className="text-3xl font-black text-neutral-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight">
               {product.name}
             </h1>
             {product.region && (
@@ -202,7 +202,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                   className="bg-neutral-50 rounded-xl p-3.5 flex items-start gap-3"
                 >
                   <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center shadow-sm shrink-0">
-                    <spec.icon className="h-4 w-4 text-coffee-600" />
+                    <spec.icon className="h-4 w-4 text-[#5b328a]" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] text-neutral-400 uppercase tracking-wide font-medium">{spec.label}</p>
@@ -229,7 +229,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                     className={cn(
                       "px-5 py-3 rounded-xl text-sm font-semibold transition-all",
                       selectedVariant?.id === v.id
-                        ? "bg-coffee-950 text-white shadow-lg shadow-coffee-950/20"
+                        ? "bg-[#5b328a] text-white shadow-lg shadow-[#5b328a]/20"
                         : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200",
                       !v.is_available && "opacity-40 cursor-not-allowed line-through"
                     )}
@@ -259,7 +259,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                     className={cn(
                       "px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
                       grind === opt
-                        ? "bg-coffee-100 text-coffee-900 ring-2 ring-coffee-300"
+                        ? "bg-[#faead5] text-[#1d1d1b] ring-2 ring-[#5b328a]"
                         : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                     )}
                   >
@@ -272,11 +272,11 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
 
           {/* Price + Add to cart */}
           {selectedVariant && (
-            <div className="bg-gradient-to-r from-coffee-50 to-amber-50/50 rounded-2xl p-5 space-y-4">
+            <div className="bg-gradient-to-r bg-[#faead5]/60 rounded-2xl p-5 space-y-4">
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-[11px] text-neutral-400 uppercase tracking-wider font-medium">Итого</p>
-                  <p className="text-3xl font-black text-neutral-900 mt-0.5">
+                  <p className="text-2xl sm:text-3xl font-black text-neutral-900 mt-0.5">
                     {formatPrice(selectedVariant.price * quantity)}
                   </p>
                 </div>
@@ -304,8 +304,8 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                 className={cn(
                   "w-full py-4 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all duration-300",
                   added
-                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]"
-                    : "bg-coffee-950 text-white hover:bg-coffee-800 hover:shadow-xl active:scale-[0.98]"
+                    ? "bg-[#5b328a] text-white shadow-lg shadow-[#5b328a]/30 scale-[1.02]"
+                    : "bg-[#5b328a] text-white hover:bg-[#4a2870] hover:shadow-xl active:scale-[0.98]"
                 )}
               >
                 {added ? (
@@ -342,8 +342,8 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
         {isCoffee && product.brewing_methods && product.brewing_methods.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="h-10 w-10 rounded-xl bg-coffee-100 flex items-center justify-center">
-                <Coffee className="h-5 w-5 text-coffee-700" />
+              <div className="h-10 w-10 rounded-xl bg-[#faead5] flex items-center justify-center">
+                <Coffee className="h-5 w-5 text-[#5b328a]" />
               </div>
               <h2 className="text-lg font-black text-neutral-900">Способы приготовления</h2>
             </div>
@@ -352,7 +352,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
               {product.brewing_methods.map((method, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-neutral-100 rounded-2xl p-5 hover:shadow-lg hover:shadow-coffee-100/50 transition-all duration-300 group"
+                  className="bg-white border border-neutral-100 rounded-2xl p-5 hover:shadow-lg hover:shadow-[#faead5]/50 transition-all duration-300 group"
                 >
                   {method.image_url && (
                     <div className="aspect-video rounded-xl overflow-hidden mb-4 bg-neutral-50">
@@ -364,8 +364,8 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                     </div>
                   )}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="h-7 w-7 rounded-lg bg-coffee-50 flex items-center justify-center">
-                      <Droplets className="h-3.5 w-3.5 text-coffee-600" />
+                    <div className="h-7 w-7 rounded-lg bg-[#faead5]/50 flex items-center justify-center">
+                      <Droplets className="h-3.5 w-3.5 text-[#5b328a]" />
                     </div>
                     <h4 className="font-bold text-neutral-900 text-sm">{method.method}</h4>
                   </div>
@@ -380,8 +380,8 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
         {isTea && product.brewing_instructions && product.brewing_instructions.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-emerald-700" />
+              <div className="h-10 w-10 rounded-xl bg-[#faead5] flex items-center justify-center">
+                <Leaf className="h-5 w-5 text-[#5b328a]" />
               </div>
               <h2 className="text-lg font-black text-neutral-900">Как заваривать</h2>
             </div>
@@ -390,7 +390,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
               {product.brewing_instructions.map((instr, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-neutral-100 rounded-2xl p-5 hover:shadow-lg hover:shadow-emerald-100/50 transition-all duration-300 group"
+                  className="bg-white border border-neutral-100 rounded-2xl p-5 hover:shadow-lg hover:shadow-[#faead5]/50 transition-all duration-300 group"
                 >
                   {instr.image_url && (
                     <div className="aspect-video rounded-xl overflow-hidden mb-4 bg-neutral-50">
@@ -402,7 +402,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                     </div>
                   )}
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="h-7 w-7 rounded-lg bg-emerald-50 flex items-center justify-center text-sm font-black text-emerald-600">
+                    <div className="h-7 w-7 rounded-lg bg-[#faead5]/50 flex items-center justify-center text-sm font-black text-[#5b328a]">
                       {i + 1}
                     </div>
                     <h4 className="font-bold text-neutral-900 text-sm">{instr.title}</h4>
@@ -418,8 +418,8 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
         {product.attached_files && product.attached_files.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-5">
-              <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <FileText className="h-5 w-5 text-blue-700" />
+              <div className="h-10 w-10 rounded-xl bg-[#faead5] flex items-center justify-center">
+                <FileText className="h-5 w-5 text-[#e6610d]" />
               </div>
               <h2 className="text-lg font-black text-neutral-900">Файлы</h2>
             </div>
@@ -431,10 +431,10 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                   href={file.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 bg-white border border-neutral-100 rounded-xl p-4 hover:shadow-md hover:border-blue-200 transition-all group"
+                  className="flex items-center gap-3 bg-white border border-neutral-100 rounded-xl p-4 hover:shadow-md hover:border-[#e6610d]/30 transition-all group"
                 >
-                  <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                    <Download className="h-4 w-4 text-blue-600 group-hover:translate-y-0.5 transition-transform" />
+                  <div className="h-10 w-10 rounded-lg bg-[#faead5]/50 flex items-center justify-center shrink-0">
+                    <Download className="h-4 w-4 text-[#e6610d] group-hover:translate-y-0.5 transition-transform" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-neutral-800 truncate">{file.name}</p>
@@ -444,7 +444,7 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
                       </p>
                     )}
                   </div>
-                  <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-blue-500 transition-colors shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-neutral-300 group-hover:text-[#e6610d] transition-colors shrink-0" />
                 </a>
               ))}
             </div>

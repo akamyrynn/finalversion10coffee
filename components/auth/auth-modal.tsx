@@ -49,9 +49,9 @@ export function AuthModal({ announcement }: AuthModalProps) {
 
         {/* Announcement from admin */}
         {announcement && (
-          <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 mb-5">
-            <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[12px] text-amber-800 leading-relaxed">{announcement}</p>
+          <div className="flex items-start gap-2.5 rounded-xl bg-[#faead5] border border-[#e6610d]/20 px-4 py-3 mb-5">
+            <Info className="h-4 w-4 text-[#e6610d] shrink-0 mt-0.5" />
+            <p className="text-[12px] text-[#2d1b11] leading-relaxed">{announcement}</p>
           </div>
         )}
 

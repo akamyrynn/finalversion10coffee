@@ -5,8 +5,6 @@ import LandingHeader from "./LandingHeader";
 import BurgerMenu from "./BurgerMenu";
 import Preloader from "./Preloader";
 import VideoHero from "./VideoHero";
-import MapPlaceholder from "./MapPlaceholder";
-import ProductShowcase from "./ProductShowcase";
 import PartnerTestimonials from "./PartnerTestimonials";
 import Advantages from "./Advantages";
 import ProductImages from "./ProductImages";
@@ -35,12 +33,13 @@ export default function LandingPage() {
 
       <div ref={pageRef} style={{ position: "relative", width: "100%", height: "100%" }}>
         <VideoHero />
-        <MapPlaceholder />
-        <ProductShowcase />
+        {/* Wrap Marquee + ProductImages so sticky only works within this scope */}
+        <div style={{ position: "relative" }}>
+          <Marquee />
+          <ProductImages />
+        </div>
         <PartnerTestimonials />
         <Advantages />
-        <ProductImages />
-        <Marquee />
         <PriceListForm />
         <FAQ />
         <Mission />

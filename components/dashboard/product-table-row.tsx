@@ -69,7 +69,7 @@ export function ProductTableRow({
         <div className="min-w-0 flex-1">
           <Link
             href={`/dashboard/product/${product.id}`}
-            className="text-[13px] font-semibold text-neutral-900 hover:text-coffee-700 transition-colors truncate block"
+            className="text-[13px] font-semibold text-neutral-900 hover:text-[#5b328a] transition-colors truncate block"
           >
             {product.name}
           </Link>
@@ -91,10 +91,10 @@ export function ProductTableRow({
                 className={cn(
                   "text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase",
                   s === "new"
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-[#faead5] text-[#5b328a]"
                     : s === "popular"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-red-100 text-red-700"
+                      ? "bg-[#faead5] text-[#e6610d]"
+                      : "bg-[#faead5] text-[#e6610d]"
                 )}
               >
                 {s === "new" ? "new" : s === "popular" ? "хит" : "sale"}
@@ -154,7 +154,7 @@ export function ProductTableRow({
         </div>
 
         {/* 1kg section — visually separated */}
-        <div className="grid grid-cols-[60px_70px_70px] gap-0 items-center text-center min-w-[200px] border-l-2 border-coffee-200/50 pl-1">
+        <div className="grid grid-cols-[60px_70px_70px] gap-0 items-center text-center min-w-[200px] border-l-2 border-[#5b328a]/20 pl-1">
           <div className="text-[13px] font-semibold text-neutral-900 tabular-nums">
             {price1kg > 0 ? Math.round(price1kg) : "—"}
           </div>

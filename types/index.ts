@@ -220,6 +220,7 @@ export interface Order {
   comment: string | null
   admin_notes: string | null
   cdek_tracking_number: string | null
+  cap_2000_tracking_number: string | null
   created_at: string
   updated_at: string
 

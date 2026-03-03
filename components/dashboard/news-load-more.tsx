@@ -46,7 +46,7 @@ export function NewsLoadMore({ initialItems, total }: NewsLoadMoreProps) {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-bold text-neutral-900 line-clamp-2 group-hover:text-coffee-700 transition-colors">
+              <p className="text-[13px] font-bold text-neutral-900 line-clamp-2 group-hover:text-[#5b328a] transition-colors">
                 {item.title}
               </p>
               {item.excerpt && (

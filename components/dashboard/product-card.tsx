@@ -66,19 +66,19 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
   }
 
   const stickerStyles: Record<string, string> = {
-    new: "bg-emerald-500/90 text-white backdrop-blur-sm",
-    month_discount: "bg-red-500/90 text-white backdrop-blur-sm",
-    popular: "bg-gradient-to-r from-amber-400 to-orange-500 text-white backdrop-blur-sm",
+    new: "bg-[#5b328a]/90 text-white backdrop-blur-sm",
+    month_discount: "bg-[#e6610d]/90 text-white backdrop-blur-sm",
+    popular: "bg-[#e6610d] text-white backdrop-blur-sm",
   }
 
   return (
     <div
-      className="group relative flex flex-col rounded-[20px] overflow-hidden transition-all duration-500 hover:-translate-y-1.5 animate-fade-in-up bg-white border border-black/[0.04] hover:shadow-2xl hover:shadow-coffee-300/20"
+      className="group relative flex flex-col rounded-[20px] overflow-hidden transition-all duration-500 hover:-translate-y-1.5 animate-fade-in-up bg-white border border-black/[0.04] hover:shadow-2xl hover:shadow-[#5b328a]/10"
       style={{ animationDelay: `${index * 80}ms`, animationFillMode: "backwards" }}
     >
       {/* Image area - large and prominent */}
       <Link href={`/dashboard/product/${product.id}`} className="relative block">
-        <div className="relative aspect-[4/3] bg-gradient-to-br from-coffee-50 via-coffee-100/50 to-coffee-50 overflow-hidden">
+        <div className="relative aspect-[4/3] bg-gradient-to-br bg-[#faead5] overflow-hidden">
           {product.images && product.images.length > 0 ? (
             <img
               src={product.images[0]}
@@ -87,7 +87,7 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <Coffee className="h-16 w-16 text-coffee-200/60 transition-all duration-500 group-hover:text-coffee-300/80 group-hover:scale-110" />
+              <Coffee className="h-16 w-16 text-[#e6610d]/30 transition-all duration-500 group-hover:text-[#e6610d]/50 group-hover:scale-110" />
             </div>
           )}
 
@@ -137,7 +137,7 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
         {/* Q-grader badge floating */}
         {product.q_grader_rating && (
           <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full">
-            <Star className="h-3 w-3 text-gold-400 fill-gold-400" />
+            <Star className="h-3 w-3 text-[#e6610d] fill-[#e6610d]" />
             <span className="text-[11px] font-bold text-white">Q{product.q_grader_rating}</span>
           </div>
         )}
@@ -146,7 +146,7 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
       {/* Content */}
       <div className="flex flex-col flex-1 p-4 pt-3">
         <Link href={`/dashboard/product/${product.id}`}>
-          <h3 className="text-[14px] font-bold text-neutral-900 group-hover:text-coffee-700 transition-colors line-clamp-2 leading-snug">
+          <h3 className="text-[14px] font-bold text-neutral-900 group-hover:text-[#5b328a] transition-colors line-clamp-2 leading-snug">
             {product.name}
           </h3>
         </Link>
@@ -156,7 +156,7 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
           <p className="text-[11px] text-neutral-400 mt-1 truncate font-medium">
             {product.region}
             {product.roast_level && (
-              <span className="text-coffee-300"> &middot; </span>
+              <span className="text-[#e6610d]/40"> &middot; </span>
             )}
             {product.roast_level && (
               <span className="text-neutral-500">{product.roast_level}</span>
@@ -182,7 +182,7 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
                   className={cn(
                     "text-[11px] px-3 py-1.5 rounded-full font-semibold transition-all duration-200",
                     selectedVariant?.id === v.id
-                      ? "bg-coffee-950 text-white shadow-md shadow-coffee-950/20"
+                      ? "bg-[#5b328a] text-white shadow-md shadow-[#5b328a]/20"
                       : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700"
                   )}
                 >
@@ -244,10 +244,10 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
                   onClick={handleAddToCart}
                   disabled={!selectedVariant}
                   className={cn(
-                    "h-9 w-9 flex items-center justify-center rounded-full transition-all duration-300",
+                    "h-9 w-9 flex items-center justify-center rounded-full transition-colors duration-300",
                     addedToCart
-                      ? "bg-emerald-500 text-white scale-110 shadow-lg shadow-emerald-500/30"
-                      : "bg-coffee-950 text-white hover:bg-coffee-800 hover:shadow-lg hover:shadow-coffee-300/40 active:scale-95"
+                      ? "bg-[#5b328a] text-white"
+                      : "bg-[#5b328a] text-white hover:bg-[#4a2870] active:scale-95"
                   )}
                 >
                   {addedToCart ? (

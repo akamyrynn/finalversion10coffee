@@ -74,7 +74,7 @@ export function CartSidebar({
         {/* Header */}
         <div className="px-5 pt-5 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl bg-coffee-950 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-[#5b328a] flex items-center justify-center">
               <ShoppingBag className="h-4.5 w-4.5 text-white" />
             </div>
             <div>
@@ -99,8 +99,8 @@ export function CartSidebar({
         <div className="flex-1 overflow-y-auto px-3">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-coffee-50 to-amber-50 flex items-center justify-center mb-4">
-                <Coffee className="h-7 w-7 text-coffee-300" />
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br bg-[#faead5] flex items-center justify-center mb-4">
+                <Coffee className="h-7 w-7 text-[#e6610d]/50" />
               </div>
               <p className="text-[13px] font-semibold text-neutral-900">Корзина пуста</p>
               <p className="text-[12px] text-neutral-400 mt-1.5 max-w-[200px] leading-relaxed">
@@ -110,10 +110,10 @@ export function CartSidebar({
           ) : (
             <div className="space-y-1 pb-2">
               {items.map((item) => (
-                <div key={item.id} className="group rounded-xl p-3 hover:bg-coffee-50/40 transition-colors">
+                <div key={item.id} className="group rounded-xl p-3 hover:bg-[#faead5]/40 transition-colors">
                   <div className="flex items-start gap-3">
                     {/* Image */}
-                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-coffee-50 to-neutral-50 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="h-14 w-14 rounded-xl bg-gradient-to-br bg-[#faead5] flex items-center justify-center shrink-0 overflow-hidden">
                       {item.product?.images?.[0] ? (
                         <img
                           src={item.product.images[0]}
@@ -121,7 +121,7 @@ export function CartSidebar({
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <Coffee className="h-5 w-5 text-coffee-200" />
+                        <Coffee className="h-5 w-5 text-[#e6610d]/30" />
                       )}
                     </div>
 
@@ -178,7 +178,7 @@ export function CartSidebar({
           {items.length > 0 && (
             <>
               {/* Total block */}
-              <div className="bg-gradient-to-r from-coffee-50 to-amber-50/50 rounded-xl p-4 space-y-2">
+              <div className="bg-gradient-to-r bg-[#faead5] rounded-xl p-4 space-y-2">
                 {appliedPromo && (
                   <>
                     <div className="flex items-end justify-between">
@@ -246,7 +246,7 @@ export function CartSidebar({
               {/* Checkout */}
               <Link
                 href="/dashboard/checkout"
-                className="flex items-center justify-center w-full h-12 bg-coffee-950 text-white text-[13px] font-bold tracking-wide rounded-xl hover:bg-coffee-900 transition-all hover:shadow-lg hover:shadow-coffee-950/20 active:scale-[0.98]"
+                className="flex items-center justify-center w-full h-12 bg-[#5b328a] text-white text-[13px] font-bold tracking-wide rounded-xl hover:bg-[#4a2870] transition-all hover:shadow-lg hover:shadow-[#5b328a]/20 active:scale-[0.98]"
               >
                 Оформить заказ
               </Link>
@@ -257,14 +257,14 @@ export function CartSidebar({
           <div className="space-y-2 pt-1">
             <a
               href="#"
-              className="flex items-center gap-3 p-3.5 rounded-xl bg-coffee-50/80 hover:bg-coffee-100 transition-colors"
+              className="flex items-center gap-3 p-3.5 rounded-xl bg-[#faead5]/80 hover:bg-[#faead5] transition-colors"
             >
               <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm">
-                <FileText className="h-4 w-4 text-coffee-600" />
+                <FileText className="h-4 w-4 text-[#5b328a]" />
               </div>
               <div>
-                <p className="text-[12px] font-bold text-coffee-900 leading-tight">Скачать прайс-лист</p>
-                <p className="text-[10px] text-coffee-500">PDF каталог с ценами</p>
+                <p className="text-[12px] font-bold text-[#1d1d1b] leading-tight">Скачать прайс-лист</p>
+                <p className="text-[10px] text-[#2d1b11]">PDF каталог с ценами</p>
               </div>
             </a>
 

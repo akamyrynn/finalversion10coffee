@@ -1,31 +1,28 @@
 .section {
   position: relative;
   width: 100%;
-  height: 100svh;
+  min-height: 100svh;
   background-color: var(--base-500);
 }
 
 .container {
   position: relative;
   display: flex;
-  justify-content: center;
   align-items: center;
   width: 100%;
   max-width: 2000px;
-  height: 100%;
+  min-height: 100svh;
   padding: 2.5rem;
   margin: 0 auto;
+  gap: 4rem;
 }
 
 .content {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
   flex: 1;
-  gap: 3rem;
-  padding: 6rem 4rem;
-  text-align: center;
+  gap: 2.5rem;
 }
 
 .content h6 {
@@ -33,12 +30,16 @@
 }
 
 .content h5 {
-  max-width: 580px;
+  max-width: 700px;
 }
 
 .details {
   display: flex;
-  gap: 6rem;
+  gap: 4rem;
+}
+
+.details p {
+  line-height: 1.6;
 }
 
 .circleButton {
@@ -46,7 +47,7 @@
   justify-content: center;
   align-items: center;
   width: 300px;
-  margin-top: 1rem;
+  flex-shrink: 0;
   aspect-ratio: 1;
 }
 
@@ -78,38 +79,32 @@
   color: var(--base-100);
 }
 
-.image {
-  width: 45%;
-  height: 100%;
-  max-height: 900px;
-  overflow: hidden;
-  border-radius: 0.35rem;
-}
-
 @media (max-width: 1000px) {
   .section {
-    height: 100%;
+    min-height: auto;
   }
 
   .container {
     flex-direction: column;
-    padding: 1.5rem;
+    min-height: auto;
+    padding: 4rem 1.5rem;
+    gap: 3rem;
   }
 
   .content {
-    padding: 4rem 1rem;
-  }
-
-  .content h5 {
-    max-width: 100%;
+    align-items: center;
+    text-align: center;
+    gap: 2rem;
   }
 
   .details {
     flex-direction: column;
-    gap: 2rem;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
   }
 
-  .image {
-    width: 100%;
+  .circleButton {
+    width: 200px;
   }
 }
