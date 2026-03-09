@@ -7,7 +7,7 @@ export async function getBlogPosts(page = 1, limit = 9) {
   const payload = await getPayload({ config: configPromise })
 
   const result = await payload.find({
-    collection: "news",
+    collection: "blog_posts",
     where: {
       isPublished: { equals: true },
     },
@@ -29,7 +29,7 @@ export async function getBlogPost(slug: string) {
   const payload = await getPayload({ config: configPromise })
 
   const result = await payload.find({
-    collection: "news",
+    collection: "blog_posts",
     where: {
       slug: { equals: slug },
       isPublished: { equals: true },
