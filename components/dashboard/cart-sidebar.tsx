@@ -68,8 +68,8 @@ export function CartSidebar({
   }
 
   return (
-    <div className="hidden xl:flex w-[340px] flex-col shrink-0 p-3 pl-0">
-      <div className="flex flex-col flex-1 bg-white rounded-2xl overflow-hidden border border-black/[0.04]">
+    <div className="hidden xl:flex w-[340px] flex-col shrink-0 p-3 pl-0 min-h-0">
+      <div className="flex flex-col flex-1 min-h-0 bg-white rounded-2xl overflow-hidden border border-black/[0.04]">
 
         {/* Header */}
         <div className="px-5 pt-5 pb-3">

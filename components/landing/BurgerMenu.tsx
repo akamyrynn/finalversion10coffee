@@ -1,11 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useLenis } from "lenis/react";
 import gsap from "gsap";
 import { FaTelegram, FaInstagram, FaVk } from "react-icons/fa";
 import styles from "./BurgerMenu.module.css";
+
+const MENU_IMAGES = [
+  "/Ассортимент/Мокап Гондурас.png",
+  "/Ассортимент/Мокап Колумбия 036.png",
+  "/Ассортимент/Мокап Колумбия Декаф.png",
+  "/media/Мокап б.п Бленд1-600x400.png",
+  "/media/Мокап б.п Браз-600x400.png",
+  "/media/Мокап б.п Колумбия-600x400.png",
+];
 
 const NAV_LINKS = [
   { label: "О нас", href: "#mission" },
@@ -32,6 +41,7 @@ export default function BurgerMenu({ isOpen, onClose, pageRef }: BurgerMenuProps
   const pathname = usePathname();
   const router = useRouter();
   const lenis = useLenis();
+  const [activeImg, setActiveImg] = useState(0);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -200,16 +210,27 @@ export default function BurgerMenu({ isOpen, onClose, pageRef }: BurgerMenuProps
         <div className={styles.menuItems}>
           <div className={styles.colLg}>
             <div className={styles.previewImg}>
-              <img src="/landing/menu-preview.jpg" alt="" />
+              {MENU_IMAGES.map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  style={{
+                    opacity: activeImg === i ? 1 : 0,
+                    transition: "opacity 0.5s ease",
+                  }}
+                />
+              ))}
             </div>
           </div>
 
           <div className={styles.colSm}>
             <div className={styles.menuLinks}>
-              {NAV_LINKS.map((link) => (
+              {NAV_LINKS.map((link, i) => (
                 <div className={styles.menuLink} key={link.label}>
                   <a
                     href={link.href}
+                    onMouseEnter={() => setActiveImg(i)}
                     onClick={(e) => {
                       e.preventDefault();
                       handleLinkClick(link.href);

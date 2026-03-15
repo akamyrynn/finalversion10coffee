@@ -30,27 +30,21 @@ export const Orders: CollectionConfig = {
           data.orderId = `10C-${timestamp}-${random}`
         }
 
-        // Auto-calculate discount, VAT, and total
+        // Auto-calculate total
         if (data) {
           const subtotal = Number(data.subtotal) || 0
           const discountPercent = Number(data.discountPercent) || 0
-          data.discountAmount = Math.round(subtotal * discountPercent) / 100
 
-          let vatPercent = 0
-          if (data.vatRate === "custom") {
-            vatPercent = Number(data.vatCustomRate) || 0
-          } else if (data.vatRate && data.vatRate !== "none") {
-            vatPercent = Number(data.vatRate)
+          // Only overwrite discountAmount if admin set discountPercent > 0
+          // Otherwise keep the value from promo code
+          if (discountPercent > 0) {
+            data.discountAmount = Math.round(subtotal * discountPercent) / 100
           }
 
-          const afterDiscount = subtotal - data.discountAmount
-          const totalBeforeVat = afterDiscount + (Number(data.deliveryCost) || 0)
-          data.vatAmount =
-            vatPercent > 0
-              ? Math.round((totalBeforeVat * vatPercent) / (100 + vatPercent) * 100) / 100
-              : 0
-
-          data.total = totalBeforeVat
+          const discountAmount = Number(data.discountAmount) || 0
+          const afterDiscount = subtotal - discountAmount
+          const deliveryCost = Number(data.deliveryCost) || 0
+          data.total = afterDiscount + deliveryCost
         }
 
         return data

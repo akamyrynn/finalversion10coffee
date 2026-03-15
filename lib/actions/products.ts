@@ -252,7 +252,7 @@ export async function getProductById(id: number | string): Promise<Product | nul
   try {
     const doc = await payload.findByID({
       collection: "products",
-      id: Number(id),
+      id: id,
       depth: 2,
     })
     return transformProduct(doc)
@@ -336,15 +336,13 @@ export async function toggleFavorite(productId: string): Promise<{ isFavorite: b
   if (!clientId) return { isFavorite: false }
 
   const payload = await getPayloadClient()
-  const numericProductId = Number(productId)
-
   // Check if already favorited
   const { docs } = await payload.find({
     collection: "favorites",
     where: {
       and: [
         { clientId: { equals: clientId } },
-        { product: { equals: numericProductId } },
+        { product: { equals: productId } },
       ],
     },
     limit: 1,
@@ -358,7 +356,7 @@ export async function toggleFavorite(productId: string): Promise<{ isFavorite: b
     // Add favorite
     await payload.create({
       collection: "favorites",
-      data: { clientId, product: numericProductId },
+      data: { clientId, product: productId },
     })
     return { isFavorite: true }
   }

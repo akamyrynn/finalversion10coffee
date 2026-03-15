@@ -92,7 +92,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-white p-2 md:p-3">
-      <div className="bg-white rounded-[22px] min-h-[calc(100vh-1.5rem)] overflow-hidden shadow-sm flex flex-col relative">
+      <div className="bg-white rounded-[22px] h-[calc(100vh-1.5rem)] overflow-hidden shadow-sm flex flex-col relative">
 
         {/* ── TOP NAV BAR ── */}
         <header className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-5 shrink-0 z-30 relative">

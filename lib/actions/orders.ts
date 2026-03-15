@@ -120,7 +120,7 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
   try {
     const doc = await payload.findByID({
       collection: "orders",
-      id: Number(orderId),
+      id: orderId,
       depth: 1,
     })
     return transformOrder(doc)
@@ -188,17 +188,17 @@ export async function createOrder(params: {
   }))
 
   // Resolve promo code Payload ID
-  let payloadPromoId: number | undefined
+  let payloadPromoId: string | number | undefined
   if (params.promoCodeId) {
     try {
       const payloadClient = await getPayloadClient()
       const { docs } = await payloadClient.find({
         collection: "promo-codes",
-        where: { id: { equals: Number(params.promoCodeId) } },
+        where: { id: { equals: params.promoCodeId } },
         limit: 1,
         depth: 0,
       })
-      if (docs[0]) payloadPromoId = docs[0].id as number
+      if (docs[0]) payloadPromoId = docs[0].id
     } catch {
       // Promo code not found in Payload, skip
     }
@@ -228,11 +228,27 @@ export async function createOrder(params: {
     data: orderData,
   })
 
+  // Also populate order_items Supabase table (reliable source for repeat orders)
+  const adminDb = createAdminClient()
+  const orderItemsRows = cartItems.map((item) => ({
+    order_id: String(doc.id),
+    product_id: item.product_id,
+    variant_id: item.variant_id,
+    product_name: item.product?.name || "",
+    variant_name: item.variant?.name || "",
+    grind_option: item.grind_option || null,
+    quantity: item.quantity,
+    unit_price: item.variant?.price ?? 0,
+    total_price: (item.variant?.price ?? 0) * item.quantity,
+    weight_grams: item.variant?.weight_grams ?? null,
+  }))
+
+  await adminDb.from("order_items").insert(orderItemsRows)
+
   // Clear cart (now uses direct Supabase queries, no Payload transaction issues)
   await clearPayloadCart()
 
   // Create notification via admin client (RLS requires admin for INSERT)
-  const adminDb = createAdminClient()
   await adminDb.from("notifications").insert({
     client_id: user.id,
     type: "order_update",
@@ -263,42 +279,123 @@ export async function repeatOrder(orderId: string): Promise<{ success?: boolean;
   const db = createAdminClient()
 
   try {
-    const doc = await payload.findByID({
-      collection: "orders",
-      id: Number(orderId),
-      depth: 0,
-    })
+    // ===== Step 1: Try order_items Supabase table first (has product_id/variant_id) =====
+    const { data: dbItems, error: dbErr } = await db
+      .from("order_items")
+      .select("product_id, variant_id, product_name, variant_name, grind_option, quantity")
+      .eq("order_id", orderId)
 
-    const items = (doc as any).items as any[] || []
+    console.log("[repeatOrder] order_items query:", { orderId, dbItems: dbItems?.length, dbErr: dbErr?.message })
+
+    if (dbItems && dbItems.length > 0) {
+      let addedCount = 0
+      for (const row of dbItems) {
+        const grindOption = row.grind_option || ""
+        const qty = row.quantity || 1
+
+        const { data: existing } = await db
+          .from("cart_items")
+          .select("id, quantity")
+          .eq("client_id", userId)
+          .eq("product_id", row.product_id)
+          .eq("variant_id", row.variant_id)
+          .eq("grind_option", grindOption)
+          .limit(1)
+          .single()
+
+        if (existing) {
+          const { error } = await db
+            .from("cart_items")
+            .update({ quantity: existing.quantity + qty })
+            .eq("id", existing.id)
+          console.log("[repeatOrder] update cart:", { error: error?.message })
+          if (!error) addedCount++
+        } else {
+          const { error } = await db.from("cart_items").insert({
+            client_id: userId,
+            product_id: row.product_id,
+            variant_id: row.variant_id,
+            quantity: qty,
+            grind_option: grindOption,
+          })
+          console.log("[repeatOrder] insert cart:", { product_id: row.product_id, error: error?.message })
+          if (!error) addedCount++
+        }
+      }
+
+      if (addedCount > 0) {
+        revalidatePath("/dashboard")
+        return { success: true }
+      }
+    }
+
+    // ===== Step 2: Try Payload items =====
+    let items: { productName: string; variantName: string; grindOption: string; quantity: number }[] = []
+
+    try {
+      const doc = await payload.findByID({
+        collection: "orders",
+        id: orderId,
+        depth: 0,
+      })
+      const rawDoc = doc as any
+      console.log("[repeatOrder] Payload doc keys:", Object.keys(rawDoc))
+      console.log("[repeatOrder] Payload doc.items:", JSON.stringify(rawDoc.items)?.slice(0, 500))
+
+      const payloadItems = rawDoc.items as any[] || []
+      items = payloadItems.map((i: any) => ({
+        productName: i.productName || i.product_name || "",
+        variantName: i.variantName || i.variant_name || "",
+        grindOption: i.grindOption || i.grind_option || "",
+        quantity: Number(i.quantity) || 1,
+      }))
+    } catch (e: any) {
+      console.log("[repeatOrder] Payload findByID error:", e?.message)
+    }
+
+    console.log("[repeatOrder] parsed items:", JSON.stringify(items))
+
     if (items.length === 0) return { error: "В заказе нет позиций" }
 
+    // ===== Step 3: Search products by name via Supabase =====
     let addedCount = 0
 
     for (const item of items) {
-      const { docs: products } = await payload.find({
-        collection: "products",
-        where: { name: { equals: item.productName } },
-        limit: 1,
-        depth: 1,
-      })
+      // Find product by name (without is_visible filter for robustness)
+      const { data: products, error: pErr } = await db
+        .from("products")
+        .select("id, name")
+        .eq("name", item.productName)
+        .limit(1)
 
-      if (!products[0]) continue
+      console.log("[repeatOrder] product search:", { name: item.productName, found: products?.length, error: pErr?.message })
 
-      const product = products[0] as any
-      const variant = (product.variants || []).find((v: any) => v.name === item.variantName)
-      if (!variant) continue
+      if (!products?.[0]) continue
 
+      const productId = products[0].id
+
+      // Find variant by name
+      const { data: variants, error: vErr } = await db
+        .from("product_variants")
+        .select("id, name")
+        .eq("product_id", productId)
+        .eq("name", item.variantName)
+        .limit(1)
+
+      console.log("[repeatOrder] variant search:", { variantName: item.variantName, found: variants?.length, error: vErr?.message })
+
+      if (!variants?.[0]) continue
+
+      const variantId = variants[0].id
       const grindOption = item.grindOption || ""
-      const productId = String(product.id)
       const qty = item.quantity || 1
 
-      // Check if same item already in cart
       const { data: existing } = await db
         .from("cart_items")
         .select("id, quantity")
         .eq("client_id", userId)
         .eq("product_id", productId)
-        .eq("variant_id", variant.id)
+        .eq("variant_id", variantId)
         .eq("grind_option", grindOption)
         .limit(1)
         .single()
@@ -313,7 +410,7 @@ export async function repeatOrder(orderId: string): Promise<{ success?: boolean;
         const { error } = await db.from("cart_items").insert({
           client_id: userId,
           product_id: productId,
-          variant_id: variant.id,
+          variant_id: variantId,
           quantity: qty,
           grind_option: grindOption,
         })
@@ -343,7 +440,7 @@ export async function setTrackingNumber(
 
   await payload.update({
     collection: "orders",
-    id: Number(orderId),
+    id: orderId,
     data: { [field]: trackingNumber },
   })
 
@@ -351,7 +448,7 @@ export async function setTrackingNumber(
   try {
     const doc = await payload.findByID({
       collection: "orders",
-      id: Number(orderId),
+      id: orderId,
       depth: 1,
     })
 
@@ -389,20 +486,20 @@ export async function deleteOrder(orderId: string): Promise<{ success?: boolean;
   try {
     const doc = await payload.findByID({
       collection: "orders",
-      id: Number(orderId),
+      id: orderId,
       depth: 0,
     })
 
     const docClient = typeof (doc as any).client === "object"
       ? (doc as any).client?.id
       : (doc as any).client
-    if (Number(docClient) !== clientDocId) {
+    if (String(docClient) !== String(clientDocId)) {
       return { error: "Нет доступа" }
     }
 
     await payload.delete({
       collection: "orders",
-      id: Number(orderId),
+      id: orderId,
     })
 
     revalidatePath("/dashboard/orders")
@@ -442,7 +539,7 @@ export async function updateOrderStatus(
   // Get current order
   const doc = await payload.findByID({
     collection: "orders",
-    id: Number(orderId),
+    id: orderId,
     depth: 1,
   })
 
@@ -451,7 +548,7 @@ export async function updateOrderStatus(
   // Update via Payload
   await payload.update({
     collection: "orders",
-    id: Number(orderId),
+    id: orderId,
     data: { status: newStatus },
   })
 

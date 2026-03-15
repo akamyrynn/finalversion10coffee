@@ -6,13 +6,15 @@ import { generateInvoicePDF } from "@/lib/generate-invoice"
 
 // Company (seller) defaults — 10coffee details
 const SELLER = {
-  name: "ИП Лаборешников Андрей Олегович",
-  inn: "742903438805",
-  address: "Челябинская обл., Верхнеуральский р-н, г. Верхнеуральск, ул. Ленина, д. 138",
-  bank: 'АО «ТБанк»',
-  bik: "044525974",
-  account: "40802810100001068216",
-  corrAccount: "30101810145250000974",
+  name: 'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ПЕЙДЖ КОФЕ"',
+  inn: "2366021670",
+  kpp: "236601001",
+  address: "354003, Россия, Краснодарский край, г Сочи, ул Пластунская, 79/1, 1",
+  bank: "ЮГО-ЗАПАДНЫЙ БАНК ПАО СБЕРБАНК, г Ростов-на-Дону",
+  bik: "046015602",
+  account: "40702810230060009772",
+  corrAccount: "30101810600000000602",
+  director: "Тен Игорь Олегович",
 }
 
 export async function GET(req: NextRequest) {
@@ -32,7 +34,7 @@ export async function GET(req: NextRequest) {
     const payload = await getPayload({ config: configPromise })
     const doc = await payload.findByID({
       collection: "orders",
-      id: Number(orderId),
+      id: orderId,
       depth: 1,
     }) as any
 
@@ -62,11 +64,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Compute VAT label
-    let vatLabel = "без НДС"
-    if (doc.vatRate && doc.vatRate !== "none") {
-      vatLabel = doc.vatRate === "custom" ? `${doc.vatCustomRate || 0}%` : `${doc.vatRate}%`
-    }
+    // VAT 22% always included in price
+    const VAT_RATE = 22
+    const vatLabel = `${VAT_RATE}%`
 
     // Build items — support both Payload embedded items and old order_items table
     let items: any[] = []
@@ -139,22 +139,23 @@ export async function GET(req: NextRequest) {
       invoiceDate,
       sellerName: SELLER.name,
       sellerInn: SELLER.inn,
+      sellerKpp: SELLER.kpp,
       sellerAddress: SELLER.address,
       sellerBank: SELLER.bank,
       sellerBik: SELLER.bik,
       sellerAccount: SELLER.account,
       sellerCorrAccount: SELLER.corrAccount,
+      sellerDirector: SELLER.director,
       buyerName,
       buyerInn,
       buyerKpp,
       buyerAddress,
       items,
       subtotal: Number(doc.subtotal) || 0,
-      discountPercent: Number(doc.discountPercent) || 0,
       discountAmount: Number(doc.discountAmount) || 0,
       deliveryCost: Number(doc.deliveryCost) || 0,
       vatLabel,
-      vatAmount: Number(doc.vatAmount) || 0,
+      vatAmount: Math.round((Number(doc.total) || 0) * VAT_RATE / (100 + VAT_RATE) * 100) / 100,
       total: Number(doc.total) || 0,
     })
 
