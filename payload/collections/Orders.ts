@@ -44,17 +44,14 @@ export const Orders: CollectionConfig = {
           const deliveryCost = Number(data.deliveryCost) || 0
           data.total = afterDiscount + deliveryCost
 
-          // Auto-populate VAT from global settings if not manually set
-          if (operation === "create" || !data.vatRate || data.vatRate === "none") {
+          // Auto-populate VAT from global settings on create
+          if (operation === "create" && (!data.vatRate || data.vatRate === "none")) {
             try {
               const settings = await req.payload.findGlobal({ slug: "site-settings" })
-              const globalRate = (settings as any).vatRate || "none"
-              const globalCustom = (settings as any).vatCustomRate
-              if (globalRate !== "none") {
-                data.vatRate = globalRate
-                if (globalRate === "custom") {
-                  data.vatCustomRate = globalCustom
-                }
+              const globalVat = Number((settings as any).vatPercent) || 0
+              if (globalVat > 0) {
+                data.vatRate = "custom"
+                data.vatCustomRate = globalVat
               }
             } catch {
               // Settings not available yet
@@ -64,10 +61,10 @@ export const Orders: CollectionConfig = {
           // Calculate VAT amount
           const rateStr = data.vatRate || "none"
           if (rateStr !== "none") {
-            const vatPercent = rateStr === "custom"
+            const vp = rateStr === "custom"
               ? (Number(data.vatCustomRate) || 0)
               : Number(rateStr)
-            data.vatAmount = Math.round(data.total * vatPercent / (100 + vatPercent) * 100) / 100
+            data.vatAmount = Math.round(data.total * vp / (100 + vp) * 100) / 100
           } else {
             data.vatAmount = 0
           }
@@ -156,7 +153,6 @@ export const Orders: CollectionConfig = {
       admin: {
         position: "sidebar",
         condition: (data) => data?.vatRate === "custom",
-        description: "Укажите свою ставку НДС",
       },
     },
     {
