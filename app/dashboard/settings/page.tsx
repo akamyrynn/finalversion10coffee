@@ -91,15 +91,21 @@ export default function SettingsPage() {
     if (!user) return
     setLoading(true)
 
-    const { error } = await supabase
-      .from("client_profiles")
-      .update({ full_name: fullName, phone })
-      .eq("id", user.id)
+    try {
+      // Update auth metadata so values persist across sessions
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { full_name: fullName, phone },
+      })
+      if (authError) throw authError
 
-    if (error) {
-      toast.error("Ошибка при сохранении")
-    } else {
+      // Also sync to client_profiles table
+      await supabase
+        .from("client_profiles")
+        .upsert({ id: user.id, full_name: fullName, phone }, { onConflict: "id" })
+
       toast.success("Профиль обновлён")
+    } catch {
+      toast.error("Ошибка при сохранении")
     }
     setLoading(false)
   }
