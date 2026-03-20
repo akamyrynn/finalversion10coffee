@@ -1,6 +1,7 @@
 "use client"
 
 import { useSearchParams, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,14 @@ export function AuthModal({ announcement }: AuthModalProps) {
   const router = useRouter()
 
   const authParam = searchParams.get("auth") as AuthView | null
-  const isOpen = authParam === "login" || authParam === "register" || authParam === "forgot"
+  const urlOpen = authParam === "login" || authParam === "register" || authParam === "forgot"
+
+  // Local open state so close is instant, not dependent on URL update
+  const [open, setOpen] = useState(urlOpen)
+
+  useEffect(() => {
+    if (urlOpen) setOpen(true)
+  }, [urlOpen])
 
   function switchView(view: AuthView) {
     const params = new URLSearchParams(searchParams.toString())
@@ -32,6 +40,7 @@ export function AuthModal({ announcement }: AuthModalProps) {
   }
 
   function handleClose() {
+    setOpen(false)
     const params = new URLSearchParams(searchParams.toString())
     params.delete("auth")
     const qs = params.toString()
@@ -39,7 +48,7 @@ export function AuthModal({ announcement }: AuthModalProps) {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+    <Dialog open={open} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[420px] rounded-2xl border-0 p-6 gap-0 shadow-2xl">
         <VisuallyHidden>
           <DialogTitle>
@@ -55,7 +64,7 @@ export function AuthModal({ announcement }: AuthModalProps) {
           </div>
         )}
 
-        {authParam === "login" && (
+        {(authParam ?? "login") === "login" && (
           <LoginForm
             onSwitchToRegister={() => switchView("register")}
             onSwitchToForgot={() => switchView("forgot")}
