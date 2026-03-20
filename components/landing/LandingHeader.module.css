@@ -199,6 +199,10 @@
     display: none;
   }
 
+  .navActions {
+    margin-left: auto;
+  }
+
   .navPillBtn {
     padding: 0.45rem 0.85rem;
     font-size: 0.75rem;

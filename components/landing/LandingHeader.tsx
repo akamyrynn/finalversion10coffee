@@ -23,6 +23,7 @@ export default function LandingHeader({
 
   useEffect(() => {
     const onScroll = () => {
+      if (window.innerWidth < 1000) return;
       const y = window.scrollY;
       if (y > lastScrollY.current && y > 80) {
         setHidden(true);
