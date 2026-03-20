@@ -16,6 +16,8 @@ interface CartSidebarProps {
   onUpdateQuantity?: (itemId: string, quantity: number) => void
   onRemoveItem?: (itemId: string) => void
   onClearCart?: () => void
+  inPanel?: boolean
+  priceListUrl?: string
 }
 
 export function CartSidebar({
@@ -23,6 +25,8 @@ export function CartSidebar({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
+  inPanel = false,
+  priceListUrl,
 }: CartSidebarProps) {
   const { appliedPromo, setAppliedPromo } = useCart()
   const [promoInput, setPromoInput] = useState("")
@@ -67,36 +71,13 @@ export function CartSidebar({
     setPromoInput("")
   }
 
-  return (
-    <div className="hidden xl:flex w-[340px] flex-col shrink-0 p-3 pl-0 min-h-0">
-      <div className="flex flex-col flex-1 min-h-0 bg-white rounded-2xl overflow-hidden border border-black/[0.04]">
+  const DEFAULT_PRICE_LIST = "/Прайс 10coffee_ Март 2026г. (1).pdf"
+  const priceListHref = priceListUrl || DEFAULT_PRICE_LIST
 
-        {/* Header */}
-        <div className="px-5 pt-5 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl bg-[#5b328a] flex items-center justify-center">
-              <ShoppingBag className="h-4.5 w-4.5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-[14px] font-bold text-neutral-900">Корзина</h3>
-              <p className="text-[11px] text-neutral-400">
-                {items.length === 0 ? "Пока пусто" : `${items.length} ${items.length === 1 ? "товар" : "товаров"} · ${formatWeight(totalWeight)}`}
-              </p>
-            </div>
-            {items.length > 0 && (
-              <button
-                onClick={onClearCart}
-                className="ml-auto h-8 w-8 rounded-lg flex items-center justify-center text-neutral-300 hover:text-red-500 hover:bg-red-50 transition-all"
-                title="Очистить корзину"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Cart items */}
-        <div className="flex-1 overflow-y-auto px-3">
+  const inner = (
+    <>
+      {/* Cart items */}
+      <div className="flex-1 overflow-y-auto px-3">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-br bg-[#faead5] flex items-center justify-center mb-4">
@@ -173,118 +154,152 @@ export function CartSidebar({
           )}
         </div>
 
-        {/* Bottom */}
-        <div className="px-5 pb-5 space-y-3">
-          {items.length > 0 && (
-            <>
-              {/* Total block */}
-              <div className="bg-gradient-to-r bg-[#faead5] rounded-xl p-4 space-y-2">
-                {appliedPromo && (
-                  <>
-                    <div className="flex items-end justify-between">
-                      <span className="text-[11px] text-neutral-400">Товары</span>
-                      <span className="text-[13px] font-semibold text-neutral-600">
-                        {Math.round(totalPrice).toLocaleString("ru-RU")} ₽
+      {/* Bottom */}
+      <div className="px-5 pb-5 space-y-3">
+        {items.length > 0 && (
+          <>
+            {/* Total block */}
+            <div className="bg-gradient-to-r bg-[#faead5] rounded-xl p-4 space-y-2">
+              {appliedPromo && (
+                <>
+                  <div className="flex items-end justify-between">
+                    <span className="text-[11px] text-neutral-400">Товары</span>
+                    <span className="text-[13px] font-semibold text-neutral-600">
+                      {Math.round(totalPrice).toLocaleString("ru-RU")} ₽
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-green-600 font-medium">Скидка</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px] font-bold text-green-600">
+                        −{currentDiscount.toLocaleString("ru-RU")} ₽
                       </span>
+                      <button
+                        onClick={handleRemovePromo}
+                        className="h-4 w-4 rounded flex items-center justify-center text-neutral-300 hover:text-red-500 transition-colors"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-green-600 font-medium">Скидка</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[13px] font-bold text-green-600">
-                          −{currentDiscount.toLocaleString("ru-RU")} ₽
-                        </span>
-                        <button
-                          onClick={handleRemovePromo}
-                          className="h-4 w-4 rounded flex items-center justify-center text-neutral-300 hover:text-red-500 transition-colors"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-                <div className="flex items-end justify-between">
-                  <span className="text-[12px] text-neutral-400 uppercase tracking-wider font-medium">Итого</span>
-                  <span className="text-2xl font-black text-neutral-900">
-                    {finalPrice > 0 ? `${Math.round(finalPrice).toLocaleString("ru-RU")} ₽` : "0 ₽"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Promo code */}
-              {appliedPromo ? (
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
-                  <span className="text-[12px] font-semibold text-green-700 flex-1">
-                    Промокод применён
-                  </span>
-                  <button
-                    onClick={handleRemovePromo}
-                    className="text-[11px] font-medium text-green-600 hover:text-red-500 transition-colors"
-                  >
-                    Отменить
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Input
-                    value={promoInput}
-                    onChange={(e) => setPromoInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
-                    placeholder="Промокод"
-                    className="h-10 text-[12px] rounded-xl border-neutral-200 bg-neutral-50 flex-1"
-                  />
-                  <button
-                    onClick={handleApplyPromo}
-                    disabled={promoLoading || !promoInput.trim()}
-                    className="h-10 px-4 bg-neutral-900 text-white text-[11px] font-bold rounded-xl hover:bg-neutral-800 transition-colors shrink-0 disabled:opacity-50 flex items-center gap-1.5"
-                  >
-                    {promoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "OK"}
-                  </button>
-                </div>
+                  </div>
+                </>
               )}
+              <div className="flex items-end justify-between">
+                <span className="text-[12px] text-neutral-400 uppercase tracking-wider font-medium">Итого</span>
+                <span className="text-2xl font-black text-neutral-900">
+                  {finalPrice > 0 ? `${Math.round(finalPrice).toLocaleString("ru-RU")} ₽` : "0 ₽"}
+                </span>
+              </div>
+            </div>
 
-              {/* Checkout */}
-              <Link
-                href="/dashboard/checkout"
-                className="flex items-center justify-center w-full h-12 bg-[#5b328a] text-white text-[13px] font-bold tracking-wide rounded-xl hover:bg-[#4a2870] transition-all hover:shadow-lg hover:shadow-[#5b328a]/20 active:scale-[0.98]"
+            {/* Promo code */}
+            {appliedPromo ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
+                <span className="text-[12px] font-semibold text-green-700 flex-1">
+                  Промокод применён
+                </span>
+                <button
+                  onClick={handleRemovePromo}
+                  className="text-[11px] font-medium text-green-600 hover:text-red-500 transition-colors"
+                >
+                  Отменить
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                  placeholder="Промокод"
+                  className="h-10 text-[12px] rounded-xl border-neutral-200 bg-neutral-50 flex-1"
+                />
+                <button
+                  onClick={handleApplyPromo}
+                  disabled={promoLoading || !promoInput.trim()}
+                  className="h-10 px-4 bg-neutral-900 text-white text-[11px] font-bold rounded-xl hover:bg-neutral-800 transition-colors shrink-0 disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {promoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "OK"}
+                </button>
+              </div>
+            )}
+
+            {/* Checkout */}
+            <Link
+              href="/dashboard/checkout"
+              className="flex items-center justify-center w-full h-12 bg-[#5b328a] text-white text-[13px] font-bold tracking-wide rounded-xl hover:bg-[#4a2870] transition-all hover:shadow-lg hover:shadow-[#5b328a]/20 active:scale-[0.98]"
+            >
+              Оформить заказ
+            </Link>
+          </>
+        )}
+
+        {/* Separate blocks */}
+        <div className="space-y-2 pt-1">
+          <a
+            href={priceListHref}
+            download
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-[#faead5]/80 hover:bg-[#faead5] transition-colors"
+          >
+            <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm">
+              <FileText className="h-4 w-4 text-[#5b328a]" />
+            </div>
+            <div>
+              <p className="text-[12px] font-bold text-[#1d1d1b] leading-tight">Скачать прайс-лист</p>
+              <p className="text-[10px] text-[#2d1b11]">PDF каталог с ценами</p>
+            </div>
+          </a>
+
+          <a
+            href="https://t.me/Ten120886"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-[#e8f4fd]/80 hover:bg-[#d4ecfa] transition-colors"
+          >
+            <div className="h-9 w-9 rounded-lg bg-[#2AABEE] flex items-center justify-center shrink-0 shadow-sm">
+              <Send className="h-3.5 w-3.5 text-white" />
+            </div>
+            <div>
+              <p className="text-[12px] font-bold text-neutral-900 leading-tight">Связаться с менеджером</p>
+              <p className="text-[10px] text-neutral-400">Telegram поддержка</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </>
+  )
+
+  if (inPanel) {
+    return <div className="flex flex-col flex-1 min-h-0 overflow-hidden">{inner}</div>
+  }
+
+  return (
+    <div className="hidden xl:flex w-[340px] flex-col shrink-0 p-3 pl-0 min-h-0">
+      <div className="flex flex-col flex-1 min-h-0 bg-white rounded-2xl overflow-hidden border border-black/[0.04]">
+        {/* Header */}
+        <div className="px-5 pt-5 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="h-10 w-10 rounded-xl bg-[#5b328a] flex items-center justify-center">
+              <ShoppingBag className="h-4.5 w-4.5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-[14px] font-bold text-neutral-900">Корзина</h3>
+              <p className="text-[11px] text-neutral-400">
+                {items.length === 0 ? "Пока пусто" : `${items.length} ${items.length === 1 ? "товар" : "товаров"} · ${formatWeight(totalWeight)}`}
+              </p>
+            </div>
+            {items.length > 0 && (
+              <button
+                onClick={onClearCart}
+                className="ml-auto h-8 w-8 rounded-lg flex items-center justify-center text-neutral-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                title="Очистить корзину"
               >
-                Оформить заказ
-              </Link>
-            </>
-          )}
-
-          {/* Separate blocks */}
-          <div className="space-y-2 pt-1">
-            <a
-              href="/Прайс 10coffee_ Март 2026г. (1).pdf"
-              download
-              className="flex items-center gap-3 p-3.5 rounded-xl bg-[#faead5]/80 hover:bg-[#faead5] transition-colors"
-            >
-              <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm">
-                <FileText className="h-4 w-4 text-[#5b328a]" />
-              </div>
-              <div>
-                <p className="text-[12px] font-bold text-[#1d1d1b] leading-tight">Скачать прайс-лист</p>
-                <p className="text-[10px] text-[#2d1b11]">PDF каталог с ценами</p>
-              </div>
-            </a>
-
-            <a
-              href="https://t.me/Ten120886"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 p-3.5 rounded-xl bg-[#e8f4fd]/80 hover:bg-[#d4ecfa] transition-colors"
-            >
-              <div className="h-9 w-9 rounded-lg bg-[#2AABEE] flex items-center justify-center shrink-0 shadow-sm">
-                <Send className="h-3.5 w-3.5 text-white" />
-              </div>
-              <div>
-                <p className="text-[12px] font-bold text-neutral-900 leading-tight">Связаться с менеджером</p>
-                <p className="text-[10px] text-neutral-400">Telegram поддержка</p>
-              </div>
-            </a>
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
+        {inner}
       </div>
     </div>
   )

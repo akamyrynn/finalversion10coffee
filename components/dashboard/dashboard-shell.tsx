@@ -24,7 +24,9 @@ import {
   Send,
   GraduationCap,
   Globe,
+  Trash2,
 } from "lucide-react"
+import { getSiteSettings } from "@/lib/actions/site-settings"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +39,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { formatDateTime } from "@/lib/utils/format"
 import type { Product, NotificationType } from "@/types"
 
-type SlidePanel = "favorites" | "notifications" | null
+type SlidePanel = "favorites" | "notifications" | "cart" | null
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -67,6 +69,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [activePanel, setActivePanel] = useState<SlidePanel>(null)
   const [favorites, setFavorites] = useState<Product[]>([])
   const [favsLoading, setFavsLoading] = useState(false)
+  const [priceListUrl, setPriceListUrl] = useState("")
+
+  useEffect(() => {
+    getSiteSettings().then((s) => {
+      if (s?.priceListUrl) setPriceListUrl(s.priceListUrl)
+    })
+  }, [])
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || ""
   const avatarUrl: string | null = user?.user_metadata?.avatar_url || null
@@ -98,11 +107,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <header className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-5 shrink-0 z-30 relative">
           {/* Left: Logo */}
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <img src="/Основной (упрощенный).svg" alt="10кофе" className="w-[120px] h-[55px] object-contain" />
+            <img src="/Основной (упрощенный).svg" alt="10кофе" className="w-[140px] sm:w-[150px] h-auto object-contain" />
           </Link>
 
-          {/* Center: Tab Switcher */}
-          <div className="flex items-center bg-[#5b328a] rounded-full p-1 gap-0.5">
+          {/* Center: Tab Switcher — desktop only */}
+          <div className="hidden lg:flex items-center bg-[#5b328a] rounded-full p-1 gap-0.5">
             <Link
               href="/dashboard"
               className={cn(
@@ -297,6 +306,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             onUpdateQuantity={updateQuantity}
             onRemoveItem={removeItem}
             onClearCart={clearCart}
+            priceListUrl={priceListUrl}
           />
 
           {/* ── SLIDE-OVER PANEL ── */}
@@ -313,7 +323,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 {/* Panel header */}
                 <div className="flex items-center justify-between px-6 h-16 border-b border-neutral-100 shrink-0">
                   <div className="flex items-center gap-3">
-                    {activePanel === "favorites" ? (
+                    {activePanel === "cart" ? (
+                      <>
+                        <div className="h-9 w-9 rounded-xl bg-[#5b328a] flex items-center justify-center">
+                          <ShoppingBag className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-[15px] font-bold text-neutral-900">Корзина</h2>
+                          <p className="text-[11px] text-neutral-400">
+                            {items.length === 0 ? "Пусто" : `${items.length} товаров`}
+                          </p>
+                        </div>
+                      </>
+                    ) : activePanel === "favorites" ? (
                       <>
                         <div className="h-9 w-9 rounded-xl bg-[#faead5] flex items-center justify-center">
                           <Heart className="h-4 w-4 text-[#e6610d] fill-[#e6610d]" />
@@ -336,6 +358,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {activePanel === "cart" && items.length > 0 && (
+                      <button
+                        onClick={clearCart}
+                        className="h-9 w-9 rounded-xl flex items-center justify-center text-neutral-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                        title="Очистить корзину"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                     {activePanel === "notifications" && unreadCount > 0 && (
                       <button
                         onClick={markAllAsRead}
@@ -355,8 +386,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {/* Panel body */}
-                <div className="flex-1 overflow-y-auto">
-                  {activePanel === "favorites" ? (
+                <div className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+                  {activePanel === "cart" ? (
+                    <CartSidebar
+                      items={items}
+                      onUpdateQuantity={updateQuantity}
+                      onRemoveItem={removeItem}
+                      onClearCart={clearCart}
+                      inPanel
+                      priceListUrl={priceListUrl}
+                    />
+                  ) : activePanel === "favorites" ? (
                     <FavoritesContent favorites={favorites} loading={favsLoading} onClose={() => setActivePanel(null)} />
                   ) : (
                     <NotificationsContent notifications={notifications} markAsRead={markAsRead} />
@@ -390,6 +430,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Coffee className="h-5 w-5" />
               <span className="text-[10px] font-medium">Каталог</span>
             </Link>
+            <button
+              onClick={() => togglePanel("cart")}
+              className={cn(
+                "relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors",
+                activePanel === "cart" ? "text-[#5b328a]" : "text-neutral-400"
+              )}
+            >
+              <ShoppingBag className="h-5 w-5" />
+              {items.length > 0 && (
+                <span className="absolute top-0.5 right-1.5 h-4 min-w-4 px-0.5 rounded-full bg-[#e6610d] text-white text-[9px] font-bold flex items-center justify-center">
+                  {items.length}
+                </span>
+              )}
+              <span className="text-[10px] font-medium">Корзина</span>
+            </button>
             <Link
               href="/dashboard/companies"
               className={cn(

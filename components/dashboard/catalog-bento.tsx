@@ -172,38 +172,11 @@ export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
           </select>
 
           <div className="ml-auto flex items-center gap-1">
-            {/* Expand all (list mode only) */}
-            {viewMode === "list" && (
-              <button
-                onClick={toggleExpandAll}
-                className="text-[11px] font-medium text-neutral-400 hover:text-neutral-900 transition-colors uppercase tracking-wider mr-3"
-              >
-                {allCats.every((c) => expandedListIds.has(c.id)) ? "Свернуть все" : "Развернуть все"}
-              </button>
-            )}
-
-            {/* View toggle */}
             <button
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "h-8 w-8 rounded-lg flex items-center justify-center transition-all",
-                viewMode === "grid"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100"
-              )}
+              onClick={toggleExpandAll}
+              className="text-[11px] font-medium text-neutral-400 hover:text-neutral-900 transition-colors uppercase tracking-wider mr-3"
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={cn(
-                "h-8 w-8 rounded-lg flex items-center justify-center transition-all",
-                viewMode === "list"
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100"
-              )}
-            >
-              <List className="h-3.5 w-3.5" />
+              {allCats.every((c) => expandedListIds.has(c.id)) ? "Свернуть все" : "Развернуть все"}
             </button>
           </div>
         </div>

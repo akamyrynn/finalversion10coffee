@@ -71,7 +71,7 @@ export const BlogPosts: CollectionConfig = {
     read: () => true,
     create: ({ req }) => !!req.user,
     update: ({ req }) => !!req.user,
-    delete: ({ req }) => req.user?.role === "admin",
+    delete: ({ req }) => !!req.user,
   },
   hooks: {
     beforeChange: [

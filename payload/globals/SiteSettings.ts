@@ -22,6 +22,15 @@ export const SiteSettings: GlobalConfig = {
       defaultValue: false,
     },
     {
+      name: "priceListUrl",
+      type: "text",
+      label: "Ссылка на прайс-лист",
+      admin: {
+        description: "URL для скачивания прайс-листа (PDF). Обновляйте здесь при смене файла.",
+        placeholder: "/prais-list.pdf",
+      },
+    },
+    {
       name: "vatPercent",
       type: "number",
       label: "Ставка НДС (%)",
