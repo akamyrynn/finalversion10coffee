@@ -18,6 +18,7 @@ interface CartSidebarProps {
   onClearCart?: () => void
   inPanel?: boolean
   priceListUrl?: string
+  clientDiscount?: number
 }
 
 export function CartSidebar({
@@ -27,6 +28,7 @@ export function CartSidebar({
   onClearCart,
   inPanel = false,
   priceListUrl,
+  clientDiscount = 0,
 }: CartSidebarProps) {
   const { appliedPromo, setAppliedPromo } = useCart()
   const [promoInput, setPromoInput] = useState("")
@@ -221,6 +223,16 @@ export function CartSidebar({
                 >
                   {promoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "OK"}
                 </button>
+              </div>
+            )}
+
+            {/* Personal discount banner */}
+            {clientDiscount > 0 && (
+              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#5b328a]/8 border border-[#5b328a]/15">
+                <span className="text-lg">🎁</span>
+                <p className="text-[11px] text-[#5b328a] leading-snug">
+                  У вас персональная скидка <span className="font-bold">{clientDiscount}%</span> — менеджер применит её при обработке заказа
+                </p>
               </div>
             )}
 

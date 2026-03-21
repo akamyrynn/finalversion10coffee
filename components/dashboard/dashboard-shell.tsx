@@ -6,7 +6,7 @@ import { useAuth } from "@/providers/auth-provider"
 import { useCart } from "@/providers/cart-provider"
 import { useNotifications } from "@/providers/notification-provider"
 import { signOut } from "@/lib/actions/auth"
-import { getFavoriteProducts } from "@/lib/actions/products"
+import { getFavoriteProducts, getClientDiscount } from "@/lib/actions/products"
 import { CartSidebar } from "./cart-sidebar"
 import {
   LogOut,
@@ -70,11 +70,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<Product[]>([])
   const [favsLoading, setFavsLoading] = useState(false)
   const [priceListUrl, setPriceListUrl] = useState("")
+  const [clientDiscount, setClientDiscount] = useState(0)
 
   useEffect(() => {
     getSiteSettings().then((s) => {
       if (s?.priceListUrl) setPriceListUrl(s.priceListUrl)
     })
+    getClientDiscount().then(setClientDiscount)
   }, [])
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || ""
@@ -307,6 +309,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             onRemoveItem={removeItem}
             onClearCart={clearCart}
             priceListUrl={priceListUrl}
+            clientDiscount={clientDiscount}
           />
 
           {/* ── SLIDE-OVER PANEL ── */}
@@ -395,6 +398,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       onClearCart={clearCart}
                       inPanel
                       priceListUrl={priceListUrl}
+                      clientDiscount={clientDiscount}
                     />
                   ) : activePanel === "favorites" ? (
                     <FavoritesContent favorites={favorites} loading={favsLoading} onClose={() => setActivePanel(null)} />
