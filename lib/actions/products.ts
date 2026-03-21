@@ -300,14 +300,18 @@ export async function getClientDiscount(): Promise<number> {
   const userId = await getCurrentUserId()
   if (!userId) return 0
 
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: "clients",
-    where: { supabaseId: { equals: userId } },
-    limit: 1,
-    depth: 0,
-  })
-  return (docs[0]?.discountPercent as number) || 0
+  try {
+    const payload = await getPayloadClient()
+    const { docs } = await payload.find({
+      collection: "clients",
+      where: { supabaseId: { equals: userId } },
+      limit: 1,
+      depth: 0,
+    })
+    return (docs[0]?.discountPercent as number) || 0
+  } catch {
+    return 0
+  }
 }
 
 // ============================================================

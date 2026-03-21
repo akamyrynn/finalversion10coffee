@@ -23,14 +23,18 @@ async function getCurrentUserId(): Promise<string | null> {
 }
 
 async function getClientDocId(supabaseUserId: string): Promise<number | null> {
-  const payload = await getPayloadClient()
-  const { docs } = await payload.find({
-    collection: "clients",
-    where: { supabaseId: { equals: supabaseUserId } },
-    limit: 1,
-    depth: 0,
-  })
-  return (docs[0]?.id as number) ?? null
+  try {
+    const payload = await getPayloadClient()
+    const { docs } = await payload.find({
+      collection: "clients",
+      where: { supabaseId: { equals: supabaseUserId } },
+      limit: 1,
+      depth: 0,
+    })
+    return (docs[0]?.id as number) ?? null
+  } catch {
+    return null
+  }
 }
 
 // ============================================================
