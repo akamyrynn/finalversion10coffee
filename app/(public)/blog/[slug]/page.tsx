@@ -124,12 +124,7 @@ function renderContent(content: unknown) {
   return null
 }
 
-export async function generateStaticParams() {
-  const { posts } = await getBlogPosts(1, 100)
-  return posts.map((post: Record<string, unknown>) => ({
-    slug: post.slug as string,
-  }))
-}
+export const dynamic = "force-dynamic"
 
 export default async function BlogArticlePage({ params }: Props) {
   const { slug } = await params
