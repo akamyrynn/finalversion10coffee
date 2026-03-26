@@ -21,7 +21,7 @@ function formatPrice(n: number) {
   return new Intl.NumberFormat("ru-RU").format(n) + " ₽"
 }
 
-async function sendOrderEmail(email: string, order: any, items: any[], pdfBuffer?: Buffer) {
+async function sendOrderEmail(email: string, order: any, items: any[], pdfBuffer?: Uint8Array) {
   const itemsHtml = items.map(i =>
     `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i.productName} ${i.variantName ? `(${i.variantName})` : ""}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${i.quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${formatPrice(i.totalPrice)}</td></tr>`
   ).join("")
