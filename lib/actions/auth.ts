@@ -5,9 +5,16 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
-import { Resend } from "resend"
+import nodemailer from "nodemailer"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  auth: {
+    user: process.env.BREVO_SMTP_LOGIN,
+    pass: process.env.BREVO_SMTP_PASSWORD,
+  },
+})
 
 function generatePassword(length = 12): string {
   const chars =
@@ -90,10 +97,10 @@ export async function signUp(formData: {
     console.error("Failed to sync client to Payload:", syncError)
   }
 
-  // Send password to email via Resend
+  // Send password to email via Brevo SMTP
   try {
-    await resend.emails.send({
-      from: "10coffee <onboarding@resend.dev>",
+    await transporter.sendMail({
+      from: `"10coffee" <${process.env.BREVO_FROM_EMAIL || "10coffeeroasters@gmail.com"}>`,
       to: formData.email,
       subject: "Ваш пароль для входа в личный кабинет 10coffee",
       html: `
@@ -152,8 +159,8 @@ export async function resetPassword(formData: { email: string }) {
   }
 
   try {
-    await resend.emails.send({
-      from: "10coffee <onboarding@resend.dev>",
+    await transporter.sendMail({
+      from: `"10coffee" <${process.env.BREVO_FROM_EMAIL || "10coffeeroasters@gmail.com"}>`,
       to: formData.email,
       subject: "Новый пароль для входа в личный кабинет 10coffee",
       html: `

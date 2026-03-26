@@ -163,16 +163,9 @@ export default function LandingFooter() {
               </div>
             </div>
           </div>
-          <div className={styles.circleButton} ref={circleButtonRef}>
-            <a href="mailto:info@10coffee.ru" className={styles.circleLink}>
-              <svg className={styles.circleSvg} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                <path ref={circlePathRef} d="M50,10 A40,40 0 1,1 49.9999,10" stroke="currentColor" strokeWidth="0.75" fill="none" />
-              </svg>
-              <Copy type="lines" animateOnScroll start="top 80%" delay={0.5}>
-                <span>Написать нам</span>
-              </Copy>
-            </a>
-          </div>
+          <AnimatedButton href="mailto:info@10coffee.ru">
+            Написать нам
+          </AnimatedButton>
         </div>
       </section>
 
