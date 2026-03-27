@@ -1,6 +1,11 @@
 "use server";
 
 import { z } from "zod";
+import path from "path";
+import fs from "fs";
+import nodemailer from "nodemailer";
+import { getPayload } from "payload";
+import configPromise from "@payload-config";
 
 const priceListSchema = z.object({
   name: z.string().min(2, "Введите имя"),
@@ -13,6 +18,14 @@ export type PriceListState = {
   success: boolean;
   error?: string;
 };
+
+const smtpTransporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASSWORD,
+  },
+});
 
 export async function submitPriceListRequest(
   _prev: PriceListState,
@@ -32,22 +45,84 @@ export async function submitPriceListRequest(
     };
   }
 
+  const { name, email, phone, company } = parsed.data;
+
   try {
-    const { createClient } = await import("@/lib/supabase/server");
-    const supabase = await createClient();
-    const { error } = await supabase.from("price_list_requests").insert({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      company: parsed.data.company || null,
+    const payload = await getPayload({ config: configPromise });
+
+    // 1. Save to Payload admin
+    const record = await payload.create({
+      collection: "price-list-requests",
+      data: {
+        name,
+        email,
+        phone,
+        company: company || undefined,
+        emailSent: false,
+      },
     });
-    if (error) throw error;
+
+    // 2. Resolve price list file path from SiteSettings
+    const { getSiteSettings } = await import("@/lib/actions/site-settings");
+    const settings = await getSiteSettings();
+    const priceListUrl = settings?.priceListUrl || "/Прайс 10coffee_ Март 2026г. (1).pdf";
+    const relPath = decodeURIComponent(priceListUrl.replace(/^\//, ""));
+    const filePath = path.join(process.cwd(), "public", relPath);
+    const fileName = path.basename(filePath);
+
+    const attachments: nodemailer.SendMailOptions["attachments"] = [];
+    if (fs.existsSync(filePath)) {
+      const { size } = fs.statSync(filePath);
+      if (size < 15 * 1024 * 1024) {
+        attachments.push({ filename: fileName, path: filePath, contentType: "application/pdf" });
+      }
+    }
+
+    const downloadLink = `${process.env.NEXT_PUBLIC_SERVER_URL || ""}${priceListUrl}`;
+    const priceListNote = attachments.length > 0
+      ? "Актуальный прайс-лист прикреплён к этому письму."
+      : `Скачать актуальный прайс-лист: <a href="${downloadLink}" style="color:#e6610d">нажмите здесь</a>`;
+
+    // 3. Send email to client
+    let emailSent = false;
+    try {
+      await smtpTransporter.sendMail({
+        from: `"10coffee" <${process.env.SMTP_EMAIL}>`,
+        to: email,
+        subject: "Прайс-лист 10coffee",
+        html: `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+            <h2 style="color:#1d1d1b;margin-bottom:16px">Здравствуйте, ${name}!</h2>
+            <p style="color:#444;line-height:1.6;margin-bottom:12px">
+              Спасибо за интерес к продукции 10coffee.<br>
+              ${priceListNote}
+            </p>
+            <p style="color:#444;line-height:1.6;margin-bottom:24px">
+              Если у вас есть вопросы — напишите нам в Telegram:
+              <a href="https://t.me/Ten120886" style="color:#e6610d">@Ten120886</a>
+            </p>
+            <hr style="border:none;border-top:1px solid #eee;margin:0 0 16px"/>
+            <p style="color:#999;font-size:12px">10coffee — оптовые поставки кофе для бизнеса</p>
+          </div>
+        `,
+        attachments,
+      });
+      emailSent = true;
+    } catch {
+      // Email failed — request is already saved in admin
+    }
+
+    // 4. Update emailSent status
+    if (emailSent) {
+      await payload.update({
+        collection: "price-list-requests",
+        id: record.id,
+        data: { emailSent: true },
+      });
+    }
 
     return { success: true };
   } catch {
-    return {
-      success: false,
-      error: "Произошла ошибка. Попробуйте позже.",
-    };
+    return { success: false, error: "Произошла ошибка. Попробуйте позже." };
   }
 }

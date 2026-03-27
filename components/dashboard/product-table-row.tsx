@@ -65,15 +65,15 @@ export function ProductTableRow({
         {/* Stickers — desktop only */}
         {product.stickers?.length > 0 && (
           <div className="hidden sm:flex gap-1 shrink-0">
-            {product.stickers.map((s) => (
+            {product.stickers.map((tag) => (
               <span
-                key={s}
+                key={tag.id}
                 className={cn(
                   "text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase",
-                  s === "new" ? "bg-[#faead5] text-[#5b328a]" : "bg-[#faead5] text-[#e6610d]"
+                  tag.color === "purple" ? "bg-[#faead5] text-[#5b328a]" : "bg-[#faead5] text-[#e6610d]"
                 )}
               >
-                {s === "new" ? "new" : s === "popular" ? "хит" : "sale"}
+                {tag.name}
               </span>
             ))}
           </div>

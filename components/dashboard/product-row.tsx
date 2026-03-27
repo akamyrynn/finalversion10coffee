@@ -15,7 +15,7 @@ import {
 import { useCart } from "@/providers/cart-provider"
 import { toggleFavorite } from "@/lib/actions/products"
 import { formatPrice } from "@/lib/utils/format"
-import { STICKER_LABELS, STICKER_COLORS } from "@/lib/utils/constants"
+import { getTagBgClass } from "@/lib/utils/constants"
 import { cn } from "@/lib/utils"
 import type { Product, ProductVariant } from "@/types"
 
@@ -77,12 +77,12 @@ export function ProductRow({ product, isFavorite: initialFav }: ProductRowProps)
         >
           {product.name}
         </Link>
-        {product.stickers?.map((sticker) => (
+        {product.stickers?.map((tag) => (
           <Badge
-            key={sticker}
-            className={cn("text-[10px] px-1.5 py-0", STICKER_COLORS[sticker])}
+            key={tag.id}
+            className={cn("text-[10px] px-1.5 py-0", getTagBgClass(tag.color))}
           >
-            {STICKER_LABELS[sticker]}
+            {tag.name}
           </Badge>
         ))}
       </div>

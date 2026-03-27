@@ -78,19 +78,16 @@ export const Products: CollectionConfig = {
       ],
     },
 
-    // === СТИКЕРЫ ===
+    // === ТЕГИ ===
     {
       name: "stickers",
-      type: "select",
-      label: "Стикеры",
+      type: "relationship",
+      label: "Теги",
+      relationTo: "tags",
       hasMany: true,
-      options: [
-        { label: "Новинка", value: "new" },
-        { label: "Скидка месяца", value: "month_discount" },
-        { label: "Популярное", value: "popular" },
-      ],
       admin: {
         position: "sidebar",
+        description: "Выберите теги из списка или создайте новые в разделе «Теги»",
       },
     },
     {

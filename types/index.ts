@@ -19,7 +19,14 @@ export type DeliveryMethod = "self_pickup" | "cdek" | "cap_2000"
 
 export type ProductType = "coffee" | "tea" | "accessory"
 
-export type StickerType = "new" | "month_discount" | "popular"
+export type StickerType = string
+
+export interface ProductTag {
+  id: string
+  name: string
+  slug: string
+  color?: "orange" | "purple" | "green"
+}
 
 export type NotificationType = "order_update" | "news" | "product_restock"
 
@@ -135,7 +142,7 @@ export interface Product {
   description_images: string[]
   sort_order: number
   is_visible: boolean
-  stickers: StickerType[]
+  stickers: ProductTag[]
 
   // Coffee-specific
   roaster: string | null

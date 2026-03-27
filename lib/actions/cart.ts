@@ -71,7 +71,11 @@ function transformProductFromPayload(doc: any): Product {
     description_images: [],
     sort_order: doc.sortOrder || 0,
     is_visible: doc.isVisible ?? true,
-    stickers: doc.stickers || [],
+    stickers: (doc.stickers || []).map((tag: any) =>
+      tag && typeof tag === "object"
+        ? { id: String(tag.id), name: tag.name || "", slug: tag.slug || "", color: tag.color }
+        : null
+    ).filter(Boolean),
     roaster: coffee.roaster || null,
     roast_level: coffee.roastLevel || null,
     region: coffee.region || null,

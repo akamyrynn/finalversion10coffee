@@ -17,6 +17,8 @@ import { CartItems } from "./payload/collections/CartItems"
 import { Favorites } from "./payload/collections/Favorites"
 import { MapLocations } from "./payload/collections/MapLocations"
 import { BlogPosts } from "./payload/collections/BlogPosts"
+import { Tags } from "./payload/collections/Tags"
+import { PriceListRequests } from "./payload/collections/PriceListRequests"
 import { SiteSettings } from "./payload/globals/SiteSettings"
 
 export default buildConfig({
@@ -33,11 +35,13 @@ export default buildConfig({
 
   collections: [
     Orders,
+    PriceListRequests,
     PromoCodes,
     Clients,
     CartItems,
     Favorites,
     Products,
+    Tags,
     Categories,
     News,
     MapLocations,
@@ -60,7 +64,7 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || "",
     },
-    push: false,
+    push: true,
   }),
 
   sharp,

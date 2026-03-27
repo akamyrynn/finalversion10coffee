@@ -50,7 +50,7 @@ const commonProductFields = z.object({
   description: z.string().optional(),
   sort_order: z.number().int().default(0),
   is_visible: z.boolean().default(true),
-  stickers: z.array(z.enum(["new", "month_discount", "popular"])).default([]),
+  stickers: z.array(z.object({ id: z.string(), name: z.string(), slug: z.string(), color: z.string().optional() })).default([]),
 })
 
 export const coffeeProductSchema = commonProductFields.extend({

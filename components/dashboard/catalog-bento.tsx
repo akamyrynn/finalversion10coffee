@@ -23,7 +23,7 @@ import { formatPrice } from "@/lib/utils/format"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { ProductTableRow } from "./product-table-row"
-import type { Product, ProductType, StickerType } from "@/types"
+import type { Product, ProductType } from "@/types"
 
 interface Props {
   categories: any[]
@@ -349,10 +349,10 @@ function ListCategorySection({
   const filteredAndSorted = useMemo(() => {
     let result = [...products]
 
-    // Filter by sticker
+    // Filter by tag slug
     if (filterMode !== "all") {
       result = result.filter((p) =>
-        p.stickers?.includes(filterMode as StickerType)
+        p.stickers?.some((t) => t.slug === filterMode)
       )
     }
 
@@ -492,23 +492,15 @@ function ProdCard({ product, idx }: { product: any; idx: number }) {
 
       {product.stickers?.length > 0 && (
         <div className="flex gap-1 px-4 pt-3">
-          {product.stickers.map((s: string) => (
+          {product.stickers.map((tag: any) => (
             <span
-              key={s}
+              key={tag.id}
               className={cn(
                 "text-[9px] font-bold px-2 py-0.5 rounded-full",
-                s === "new"
-                  ? "bg-[#faead5] text-[#5b328a]"
-                  : s === "popular"
-                    ? "bg-[#faead5] text-[#e6610d]"
-                    : "bg-[#faead5] text-[#e6610d]"
+                tag.color === "purple" ? "bg-[#faead5] text-[#5b328a]" : "bg-[#faead5] text-[#e6610d]"
               )}
             >
-              {s === "new"
-                ? "Новинка"
-                : s === "popular"
-                  ? "Популярное"
-                  : "Скидка"}
+              {tag.name}
             </span>
           ))}
         </div>

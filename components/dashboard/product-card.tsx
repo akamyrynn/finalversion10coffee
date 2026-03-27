@@ -14,7 +14,7 @@ import {
 import { useCart } from "@/providers/cart-provider"
 import { toggleFavorite } from "@/lib/actions/products"
 import { formatPrice } from "@/lib/utils/format"
-import { STICKER_LABELS } from "@/lib/utils/constants"
+import { getTagBgClass } from "@/lib/utils/constants"
 import { cn } from "@/lib/utils"
 import type { Product, ProductVariant } from "@/types"
 
@@ -74,11 +74,6 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
     setQuantity(1)
   }
 
-  const stickerStyles: Record<string, string> = {
-    new: "bg-[#5b328a]/90 text-white backdrop-blur-sm",
-    month_discount: "bg-[#e6610d]/90 text-white backdrop-blur-sm",
-    popular: "bg-[#e6610d] text-white backdrop-blur-sm",
-  }
 
   return (
     <div
@@ -108,15 +103,15 @@ export function ProductCard({ product, isFavorite: initialFav, index = 0 }: Prod
         {/* Stickers - floating badges */}
         {product.stickers && product.stickers.length > 0 && (
           <div className="absolute top-3 left-3 flex gap-1.5">
-            {product.stickers.map((sticker) => (
+            {product.stickers.map((tag) => (
               <Badge
-                key={sticker}
+                key={tag.id}
                 className={cn(
                   "text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg border-0",
-                  stickerStyles[sticker]
+                  getTagBgClass(tag.color)
                 )}
               >
-                {STICKER_LABELS[sticker]}
+                {tag.name}
               </Badge>
             ))}
           </div>

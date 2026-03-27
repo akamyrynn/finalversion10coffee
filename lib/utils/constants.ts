@@ -1,4 +1,4 @@
-import type { OrderStatus, DeliveryMethod, StickerType } from "@/types"
+import type { OrderStatus, DeliveryMethod } from "@/types"
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: "Ожидает обработки",
@@ -30,16 +30,10 @@ export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
   cap_2000: "ЦАП 2000",
 }
 
-export const STICKER_LABELS: Record<StickerType, string> = {
-  new: "Новинка",
-  month_discount: "Скидка месяца",
-  popular: "Популярное",
-}
-
-export const STICKER_COLORS: Record<StickerType, string> = {
-  new: "bg-green-500 text-white",
-  month_discount: "bg-red-500 text-white",
-  popular: "bg-amber-500 text-white",
+export function getTagBgClass(color?: string): string {
+  if (color === "purple") return "bg-[#faead5] text-[#5b328a]"
+  if (color === "green") return "bg-green-100 text-green-700"
+  return "bg-[#faead5] text-[#e6610d]"
 }
 
 export const PRODUCT_TYPE_LABELS = {

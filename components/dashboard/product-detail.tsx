@@ -27,17 +27,12 @@ import { useCart } from "@/providers/cart-provider"
 import { toggleFavorite } from "@/lib/actions/products"
 import { formatPrice } from "@/lib/utils/format"
 import { cn } from "@/lib/utils"
+import { getTagBgClass } from "@/lib/utils/constants"
 import type { Product, ProductVariant } from "@/types"
 
 interface ProductDetailProps {
   product: Product
   isFavorite: boolean
-}
-
-const STICKER_STYLES: Record<string, { bg: string; label: string }> = {
-  new: { bg: "bg-[#5b328a] text-white", label: "Новинка" },
-  popular: { bg: "bg-[#e6610d] text-white", label: "Популярное" },
-  month_discount: { bg: "bg-[#e6610d] text-white", label: "Скидка месяца" },
 }
 
 export function ProductDetail({ product, isFavorite: initialFav }: ProductDetailProps) {
@@ -120,15 +115,15 @@ export function ProductDetail({ product, isFavorite: initialFav }: ProductDetail
             {/* Stickers */}
             {product.stickers && product.stickers.length > 0 && (
               <div className="absolute top-4 left-4 flex flex-col gap-1.5">
-                {product.stickers.map((s) => (
+                {product.stickers.map((tag) => (
                   <span
-                    key={s}
+                    key={tag.id}
                     className={cn(
                       "text-[11px] font-bold px-3 py-1 rounded-full shadow-lg",
-                      STICKER_STYLES[s]?.bg || "bg-neutral-500 text-white"
+                      getTagBgClass(tag.color)
                     )}
                   >
-                    {STICKER_STYLES[s]?.label || s}
+                    {tag.name}
                   </span>
                 ))}
               </div>
