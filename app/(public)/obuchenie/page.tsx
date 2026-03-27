@@ -1,4 +1,4 @@
-import SubpageHeader from "@/components/landing/SubpageHeader"
+import SiteHeader from "@/components/landing/SiteHeader"
 import LandingFooter from "@/components/landing/LandingFooter"
 import styles from "./training.module.css"
 
@@ -63,7 +63,7 @@ const FEATURES = [
 export default function TrainingPage() {
   return (
     <>
-      <SubpageHeader />
+      <SiteHeader />
 
       {/* Hero */}
       <section className={styles.hero}>

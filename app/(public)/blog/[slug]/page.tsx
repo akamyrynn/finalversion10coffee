@@ -1,5 +1,5 @@
 import { getBlogPost, getBlogPosts } from "@/lib/actions/blog"
-import SubpageHeader from "@/components/landing/SubpageHeader"
+import SiteHeader from "@/components/landing/SiteHeader"
 import LandingFooter from "@/components/landing/LandingFooter"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -139,7 +139,7 @@ export default async function BlogArticlePage({ params }: Props) {
 
   return (
     <>
-      <SubpageHeader />
+      <SiteHeader />
 
       <article>
         <header

@@ -1,9 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import LandingHeader from "./LandingHeader";
-import BurgerMenu from "./BurgerMenu";
-import MapModal from "./MapModal";
+import { useRef } from "react";
+import SiteHeader from "./SiteHeader";
 import Preloader from "./Preloader";
 import VideoHero from "./VideoHero";
 import PartnerTestimonials from "./PartnerTestimonials";
@@ -19,23 +17,11 @@ import LandingFooter from "./LandingFooter";
 
 export default function LandingPage() {
   const pageRef = useRef<HTMLDivElement>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMapOpen, setIsMapOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setIsMenuOpen((prev) => {
-      if (!prev) setIsMapOpen(false);
-      return !prev;
-    });
-  };
-  const closeMenu = () => setIsMenuOpen(false);
 
   return (
     <>
       <Preloader />
-      <LandingHeader onToggleMenu={toggleMenu} isMenuOpen={isMenuOpen} onOpenMap={() => setIsMapOpen(true)} isMapOpen={isMapOpen} />
-      <BurgerMenu isOpen={isMenuOpen} onClose={closeMenu} pageRef={pageRef} />
-      <MapModal isOpen={isMapOpen} onClose={() => setIsMapOpen(false)} />
+      <SiteHeader />
 
       <div ref={pageRef} style={{ position: "relative", width: "100%", height: "100%" }}>
         <VideoHero />

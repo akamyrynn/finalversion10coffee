@@ -1,4 +1,4 @@
-import SubpageHeader from "@/components/landing/SubpageHeader"
+import SiteHeader from "@/components/landing/SiteHeader"
 import LandingFooter from "@/components/landing/LandingFooter"
 import styles from "./service.module.css"
 
@@ -59,7 +59,7 @@ const ADVANTAGES = [
 export default function ServicePage() {
   return (
     <>
-      <SubpageHeader />
+      <SiteHeader />
 
       {/* Hero */}
       <section className={styles.hero}>

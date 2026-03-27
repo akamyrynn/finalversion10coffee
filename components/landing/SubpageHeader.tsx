@@ -7,9 +7,11 @@ import BurgerMenu from "./BurgerMenu";
 import styles from "./SubpageHeader.module.css";
 
 const NAV_LINKS = [
+  { label: "О нас", href: "/o-nas" },
   { label: "Блог", href: "/blog" },
   { label: "Обучение", href: "/obuchenie" },
   { label: "Сервис", href: "/b2b-servis" },
+  { label: "Контакты", href: "/kontakty" },
 ];
 
 export default function SubpageHeader() {

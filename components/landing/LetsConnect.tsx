@@ -26,19 +26,20 @@ export default function LetsConnect() {
           <div className={styles.details}>
             <div>
               <Copy type="lines" animateOnScroll start="top 80%" delay={0.3}>
-                <p className="mono">info@10coffee.ru</p>
-                <p className="mono">+7 (999) 123-45-67</p>
+                <p className="mono">10coffee@mail.ru</p>
+                <p className="mono">+7 (938) 453-70-60</p>
+                <p className="mono">+7 (918) 401-70-60</p>
               </Copy>
             </div>
             <div>
               <Copy type="lines" animateOnScroll start="top 80%" delay={0.3}>
                 <p className="mono">ПН--ПТ 09:00--18:00</p>
-                <p className="mono">СБ 10:00--15:00</p>
+                <p className="mono">СБ--ВС Выходные</p>
               </Copy>
             </div>
           </div>
 
-          <AnimatedButton href="mailto:info@10coffee.ru">
+          <AnimatedButton href="mailto:10coffee@mail.ru">
             Написать нам
           </AnimatedButton>
         </div>

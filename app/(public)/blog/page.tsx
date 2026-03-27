@@ -1,5 +1,5 @@
 import { getBlogPosts } from "@/lib/actions/blog"
-import SubpageHeader from "@/components/landing/SubpageHeader"
+import SiteHeader from "@/components/landing/SiteHeader"
 import LandingFooter from "@/components/landing/LandingFooter"
 import Link from "next/link"
 import styles from "./blog.module.css"
@@ -37,7 +37,7 @@ export default async function BlogPage({
 
   return (
     <>
-      <SubpageHeader />
+      <SiteHeader />
 
       <section className={styles.hero}>
         <div className={styles.heroContent}>
