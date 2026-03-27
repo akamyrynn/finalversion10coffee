@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Copy from "./_shared/Copy";
 import AnimatedButton from "./_shared/AnimatedButton";
+import PriceListFormModal from "./PriceListFormModal";
 import styles from "./ProductImages.module.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -20,6 +21,7 @@ export default function ProductImages() {
   const sectionRef = useRef<HTMLElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showPriceModal, setShowPriceModal] = useState(false);
 
   const active = PRODUCTS[activeIndex];
 
@@ -126,11 +128,13 @@ export default function ProductImages() {
 
         <div className={`${styles.bottomRow} ${styles.fadeIn}`}>
           <p className={styles.productName}>{active.name}</p>
-          <AnimatedButton href="#price-list-form">
+          <AnimatedButton href="#" onClick={(e) => { e.preventDefault(); setShowPriceModal(true); }}>
             Получить прайс-лист
           </AnimatedButton>
         </div>
       </section>
+
+      <PriceListFormModal isOpen={showPriceModal} onClose={() => setShowPriceModal(false)} />
     </div>
   );
 }

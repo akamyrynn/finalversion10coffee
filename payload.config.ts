@@ -40,8 +40,8 @@ export default buildConfig({
     Clients,
     CartItems,
     Favorites,
-    Products,
     Tags,
+    Products,
     Categories,
     News,
     MapLocations,
@@ -64,7 +64,7 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL || "",
     },
-    push: true,
+    push: false,
   }),
 
   sharp,
