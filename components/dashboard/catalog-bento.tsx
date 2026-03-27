@@ -25,15 +25,23 @@ import Link from "next/link"
 import { ProductTableRow } from "./product-table-row"
 import type { Product, ProductType } from "@/types"
 
+interface TagOption {
+  id: string
+  name: string
+  slug: string
+  color?: string
+}
+
 interface Props {
   categories: any[]
   favoriteIds: string[]
   activeType: ProductType
+  tags: TagOption[]
 }
 
 type ViewMode = "grid" | "list"
 type SortMode = "alphabetical" | "price"
-type FilterMode = "all" | "new" | "popular" | "month_discount"
+type FilterMode = string
 
 const typeTabs: { value: ProductType; label: string; icon: typeof Coffee }[] = [
   { value: "coffee", label: "Кофе", icon: Coffee },
@@ -44,13 +52,6 @@ const typeTabs: { value: ProductType; label: string; icon: typeof Coffee }[] = [
 const sortLabels: Record<SortMode, string> = {
   alphabetical: "По алфавиту",
   price: "По цене",
-}
-
-const filterLabels: Record<FilterMode, string> = {
-  all: "Показывать все",
-  new: "Новинки",
-  popular: "Популярные",
-  month_discount: "Со скидкой",
 }
 
 const cardColors = [
@@ -68,7 +69,7 @@ const cardColors = [
   "bg-[#faead5]/60",
 ]
 
-export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
+export function CatalogBento({ categories, favoriteIds, activeType, tags }: Props) {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<ViewMode>("list")
   const [sortMode, setSortMode] = useState<SortMode>("alphabetical")
@@ -159,17 +160,20 @@ export function CatalogBento({ categories, favoriteIds, activeType }: Props) {
           </select>
 
           {/* Filter */}
-          <select
-            value={filterMode}
-            onChange={(e) => setFilterMode(e.target.value as FilterMode)}
-            className="text-[12px] font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg px-3 py-2 outline-none hover:border-neutral-400 transition-colors cursor-pointer"
-          >
-            {Object.entries(filterLabels).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
+          {tags.length > 0 && (
+            <select
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value)}
+              className="text-[12px] font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg px-3 py-2 outline-none hover:border-neutral-400 transition-colors cursor-pointer"
+            >
+              <option value="all">Показывать все</option>
+              {tags.map((tag) => (
+                <option key={tag.id} value={tag.slug}>
+                  {tag.name}
+                </option>
+              ))}
+            </select>
+          )}
 
           <div className="ml-auto flex items-center gap-1">
             <button

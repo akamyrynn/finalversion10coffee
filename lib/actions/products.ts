@@ -387,3 +387,22 @@ export async function toggleFavorite(productId: string): Promise<{ isFavorite: b
     return { isFavorite: true }
   }
 }
+
+export async function getTags() {
+  try {
+    const payload = await getPayloadClient()
+    const { docs } = await payload.find({
+      collection: "tags",
+      limit: 100,
+      sort: "name",
+    })
+    return docs.map((tag: any) => ({
+      id: String(tag.id),
+      name: tag.name || "",
+      slug: tag.slug || "",
+      color: tag.color as string | undefined,
+    }))
+  } catch {
+    return []
+  }
+}
