@@ -317,12 +317,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <>
               {/* Backdrop */}
               <div
-                className="absolute inset-0 bg-black/20 z-40 animate-fade-in"
+                className="fixed inset-0 sm:absolute bg-black/20 z-40 animate-fade-in"
                 onClick={() => setActivePanel(null)}
               />
 
               {/* Panel */}
-              <div className="absolute top-0 right-0 bottom-14 lg:bottom-0 w-full sm:max-w-[520px] bg-white z-50 shadow-2xl shadow-black/20 animate-slide-in-right flex flex-col sm:rounded-l-2xl">
+              <div className="fixed inset-0 sm:absolute sm:top-0 sm:right-0 sm:bottom-0 sm:left-auto w-full sm:max-w-[520px] bg-white z-50 shadow-2xl shadow-black/20 animate-slide-in-right flex flex-col sm:rounded-l-2xl">
                 {/* Panel header */}
                 <div className="flex items-center justify-between px-6 h-16 border-b border-neutral-100 shrink-0">
                   <div className="flex items-center gap-3">

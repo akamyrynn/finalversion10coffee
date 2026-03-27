@@ -41,6 +41,11 @@ export const Tags: CollectionConfig = {
         { label: "Оранжевый", value: "orange" },
         { label: "Фиолетовый", value: "purple" },
         { label: "Зелёный", value: "green" },
+        { label: "Красный", value: "red" },
+        { label: "Синий", value: "blue" },
+        { label: "Жёлтый", value: "yellow" },
+        { label: "Розовый", value: "pink" },
+        { label: "Серый", value: "gray" },
       ],
       admin: {
         position: "sidebar",

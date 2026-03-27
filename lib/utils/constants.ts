@@ -33,6 +33,11 @@ export const DELIVERY_METHOD_LABELS: Record<DeliveryMethod, string> = {
 export function getTagBgClass(color?: string): string {
   if (color === "purple") return "bg-[#faead5] text-[#5b328a]"
   if (color === "green") return "bg-green-100 text-green-700"
+  if (color === "red") return "bg-red-100 text-red-700"
+  if (color === "blue") return "bg-blue-100 text-blue-700"
+  if (color === "yellow") return "bg-yellow-100 text-yellow-800"
+  if (color === "pink") return "bg-pink-100 text-pink-700"
+  if (color === "gray") return "bg-neutral-100 text-neutral-600"
   return "bg-[#faead5] text-[#e6610d]"
 }
 

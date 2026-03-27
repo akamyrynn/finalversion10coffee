@@ -36,8 +36,8 @@ export function ProductTableRow({
 
   return (
     <div className="py-2.5 border-b border-neutral-50 hover:bg-white/60 transition-colors group px-1">
-      {/* Product header: image + name + heart */}
-      <div className="flex items-center gap-3">
+      {/* ── DESKTOP: single row — image + name + variants + heart ── */}
+      <div className="hidden sm:flex items-center gap-3">
         {/* Thumbnail */}
         <div className="h-10 w-10 rounded-lg bg-neutral-100 shrink-0 overflow-hidden flex items-center justify-center">
           {imageUrl ? (
@@ -48,7 +48,7 @@ export function ProductTableRow({
         </div>
 
         {/* Name + description */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 w-[180px] shrink-0">
           <Link
             href={`/dashboard/product/${product.id}`}
             className="text-[13px] font-semibold text-neutral-900 hover:text-[#5b328a] transition-colors truncate block"
@@ -62,9 +62,9 @@ export function ProductTableRow({
           )}
         </div>
 
-        {/* Stickers — desktop only */}
+        {/* Stickers */}
         {product.stickers?.length > 0 && (
-          <div className="hidden sm:flex gap-1 shrink-0">
+          <div className="flex gap-1 shrink-0">
             {product.stickers.map((tag) => (
               <span
                 key={tag.id}
@@ -79,6 +79,18 @@ export function ProductTableRow({
           </div>
         )}
 
+        {/* Variant cells — inline */}
+        <div className="flex items-center gap-2 flex-wrap flex-1 justify-end">
+          {variants.map((variant) => (
+            <VariantCell
+              key={variant.id}
+              variant={variant}
+              productId={product.id}
+              onAdd={addItem}
+            />
+          ))}
+        </div>
+
         {/* Favorite */}
         <button onClick={handleFavorite} disabled={isPending} className="shrink-0">
           <Heart
@@ -90,46 +102,64 @@ export function ProductTableRow({
         </button>
       </div>
 
-      {/* ── MOBILE: variant rows (like reference screenshot) ── */}
-      {variants.length > 0 && (
-        <div className="sm:hidden mt-2 pl-[52px] space-y-1.5">
-          {variants.flatMap((variant) => {
-            const hasMultipleGrinds = variant.grind_options && variant.grind_options.length > 1
-            if (hasMultipleGrinds) {
-              return variant.grind_options!.map((grind) => (
+      {/* ── MOBILE: header + variant rows below ── */}
+      <div className="sm:hidden">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-neutral-100 shrink-0 overflow-hidden flex items-center justify-center">
+            {imageUrl ? (
+              <img src={imageUrl} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <Coffee className="h-4 w-4 text-neutral-300" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <Link
+              href={`/dashboard/product/${product.id}`}
+              className="text-[13px] font-semibold text-neutral-900 hover:text-[#5b328a] transition-colors truncate block"
+            >
+              {product.name}
+            </Link>
+            {(product.region || product.processing_method) && (
+              <p className="text-[11px] text-neutral-400 truncate">
+                {[product.region, product.processing_method].filter(Boolean).join(" · ")}
+              </p>
+            )}
+          </div>
+          <button onClick={handleFavorite} disabled={isPending} className="shrink-0">
+            <Heart
+              className={cn(
+                "h-4 w-4 transition-colors",
+                isFavorite ? "fill-red-500 text-red-500" : "text-neutral-300 hover:text-red-400"
+              )}
+            />
+          </button>
+        </div>
+        {variants.length > 0 && (
+          <div className="mt-2 pl-[52px] space-y-1.5">
+            {variants.flatMap((variant) => {
+              const hasMultipleGrinds = variant.grind_options && variant.grind_options.length > 1
+              if (hasMultipleGrinds) {
+                return variant.grind_options!.map((grind) => (
+                  <MobileVariantRow
+                    key={`${variant.id}-${grind}`}
+                    variant={variant}
+                    productId={product.id}
+                    grind={grind}
+                  />
+                ))
+              }
+              return [
                 <MobileVariantRow
-                  key={`${variant.id}-${grind}`}
+                  key={variant.id}
                   variant={variant}
                   productId={product.id}
-                  grind={grind}
-                />
-              ))
-            }
-            return [
-              <MobileVariantRow
-                key={variant.id}
-                variant={variant}
-                productId={product.id}
-                grind={variant.grind_options?.[0]}
-              />,
-            ]
-          })}
-        </div>
-      )}
-
-      {/* ── DESKTOP: variant cells ── */}
-      {variants.length > 0 && (
-        <div className="hidden sm:flex items-center gap-2 flex-wrap mt-2 pl-[52px] justify-end">
-          {variants.map((variant) => (
-            <VariantCell
-              key={variant.id}
-              variant={variant}
-              productId={product.id}
-              onAdd={addItem}
-            />
-          ))}
-        </div>
-      )}
+                  grind={variant.grind_options?.[0]}
+                />,
+              ]
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
