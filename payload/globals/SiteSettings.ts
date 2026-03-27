@@ -24,11 +24,51 @@ export const SiteSettings: GlobalConfig = {
     {
       name: "priceListUrl",
       type: "text",
-      label: "Ссылка на прайс-лист",
+      label: "Ссылка на прайс-лист (устарело)",
       admin: {
-        description: "URL для скачивания прайс-листа (PDF). Обновляйте здесь при смене файла.",
+        description: "URL для скачивания прайс-листа (PDF). Используйте поле ниже вместо этого.",
         placeholder: "/prais-list.pdf",
       },
+    },
+    {
+      name: "priceListForm",
+      type: "group",
+      label: "Форма «Получить прайс-лист»",
+      fields: [
+        {
+          name: "emailFile",
+          type: "upload",
+          label: "PDF-файл для письма",
+          relationTo: "media",
+          admin: {
+            description: "Прайс-лист, который прикрепляется к письму клиенту. Загружайте сюда актуальный файл.",
+          },
+        },
+        {
+          name: "senderName",
+          type: "text",
+          label: "Имя отправителя",
+          admin: { placeholder: "Иван Иванов" },
+        },
+        {
+          name: "senderPosition",
+          type: "text",
+          label: "Должность",
+          admin: { placeholder: "Руководитель отдела продаж" },
+        },
+        {
+          name: "senderPhone",
+          type: "text",
+          label: "Телефон",
+          admin: { placeholder: "+7 (999) 123-45-67" },
+        },
+        {
+          name: "senderTelegram",
+          type: "text",
+          label: "Telegram / WhatsApp",
+          admin: { placeholder: "@Ten120886" },
+        },
+      ],
     },
     {
       name: "vatPercent",

@@ -17,6 +17,7 @@ const priceListSchema = z.object({
 export type PriceListState = {
   success: boolean;
   error?: string;
+  name?: string;
 };
 
 const smtpTransporter = nodemailer.createTransport({
@@ -62,47 +63,77 @@ export async function submitPriceListRequest(
       },
     });
 
-    // 2. Resolve price list file path from SiteSettings
+    // 2. Resolve price list file from SiteSettings
     const { getSiteSettings } = await import("@/lib/actions/site-settings");
     const settings = await getSiteSettings();
-    const priceListUrl = settings?.priceListUrl || "/Прайс 10coffee_ Март 2026г. (1).pdf";
-    const relPath = decodeURIComponent(priceListUrl.replace(/^\//, ""));
-    const filePath = path.join(process.cwd(), "public", relPath);
-    const fileName = path.basename(filePath);
 
     const attachments: nodemailer.SendMailOptions["attachments"] = [];
-    if (fs.existsSync(filePath)) {
-      const { size } = fs.statSync(filePath);
-      if (size < 15 * 1024 * 1024) {
-        attachments.push({ filename: fileName, path: filePath, contentType: "application/pdf" });
+
+    // Priority 1: uploaded media file from priceListForm.emailFile
+    const emailFile = settings?.priceListForm?.emailFile;
+    if (emailFile?.url) {
+      attachments.push({
+        filename: emailFile.filename || "Прайс-лист 10кофе.pdf",
+        href: emailFile.url,
+        contentType: "application/pdf",
+      });
+    } else {
+      // Priority 2: local /public/ file from priceListUrl
+      const priceListUrl = settings?.priceListUrl || "/Прайс 10coffee_ Март 2026г. (1).pdf";
+      const relPath = decodeURIComponent(priceListUrl.replace(/^\//, ""));
+      const filePath = path.join(process.cwd(), "public", relPath);
+      if (fs.existsSync(filePath)) {
+        const { size } = fs.statSync(filePath);
+        if (size < 15 * 1024 * 1024) {
+          attachments.push({ filename: path.basename(filePath), path: filePath, contentType: "application/pdf" });
+        }
       }
     }
 
-    const downloadLink = `${process.env.NEXT_PUBLIC_SERVER_URL || ""}${priceListUrl}`;
-    const priceListNote = attachments.length > 0
-      ? "Актуальный прайс-лист прикреплён к этому письму."
-      : `Скачать актуальный прайс-лист: <a href="${downloadLink}" style="color:#e6610d">нажмите здесь</a>`;
+    // Sender info from settings
+    const senderName = settings?.priceListForm?.senderName || "Команда 10кофе";
+    const senderPosition = settings?.priceListForm?.senderPosition || "Руководитель отдела продаж";
+    const senderPhone = settings?.priceListForm?.senderPhone || "";
+    const senderTelegram = settings?.priceListForm?.senderTelegram || "@Ten120886";
+    const siteUrl = process.env.NEXT_PUBLIC_SERVER_URL || "https://10coffee.ru";
 
     // 3. Send email to client
     let emailSent = false;
     try {
       await smtpTransporter.sendMail({
-        from: `"10coffee" <${process.env.SMTP_EMAIL}>`,
+        from: `"10кофе" <${process.env.SMTP_EMAIL}>`,
         to: email,
-        subject: "Прайс-лист 10coffee",
+        subject: "Прайс-лист и условия сотрудничества | 10кофе",
         html: `
-          <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-            <h2 style="color:#1d1d1b;margin-bottom:16px">Здравствуйте, ${name}!</h2>
-            <p style="color:#444;line-height:1.6;margin-bottom:12px">
-              Спасибо за интерес к продукции 10coffee.<br>
-              ${priceListNote}
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1d1d1b">
+            <h2 style="margin-bottom:16px">Добрый день, ${name}!</h2>
+            <p style="line-height:1.7;margin-bottom:12px">
+              Спасибо за интерес к компании 10кофе. Вы оставляли заявку на сайте, чтобы получить прайс-лист — направляю его во вложении к этому письму.
             </p>
-            <p style="color:#444;line-height:1.6;margin-bottom:24px">
-              Если у вас есть вопросы — напишите нам в Telegram:
-              <a href="https://t.me/Ten120886" style="color:#e6610d">@Ten120886</a>
+            <p style="line-height:1.7;margin-bottom:8px">В файле вы найдете актуальные цены на:</p>
+            <ul style="line-height:1.8;margin:0 0 16px;padding-left:20px">
+              <li>☕ Кофе собственной обжарки (всегда свежий, жарим под заказ)</li>
+              <li>🍵 Чай (премиальные сорта)</li>
+              <li>⚙️ Кофейное оборудование и аксессуары</li>
+            </ul>
+            <p style="line-height:1.7;margin-bottom:16px">
+              Прайс достаточно объемный, поэтому если вы ищете что-то конкретное (например, смесь для эспрессо в офис или оборудование для кофейни) — просто ответьте на это письмо или позвоните мне.<br><br>
+              Я помогу сориентироваться в сортах, рассчитаю стоимость под ваш бюджет и, при необходимости, организую дегустацию образцов.
+            </p>
+            <p style="line-height:1.9;margin-bottom:24px">
+              Мои контакты для быстрой связи:<br>
+              ${senderPhone ? `📞 ${senderPhone}<br>` : ""}
+              💬 <a href="https://t.me/${senderTelegram.replace("@", "")}" style="color:#e6610d">${senderTelegram}</a><br>
+              🌐 <a href="${siteUrl}" style="color:#e6610d">${siteUrl}</a>
+            </p>
+            <p style="margin-bottom:4px">Хорошего дня и вкусного кофе!</p>
+            <p style="margin-bottom:20px">
+              С уважением,<br>
+              <strong>${senderName}</strong><br>
+              <span style="color:#888;font-size:14px">${senderPosition}, компания 10кофе</span>
             </p>
             <hr style="border:none;border-top:1px solid #eee;margin:0 0 16px"/>
-            <p style="color:#999;font-size:12px">10coffee — оптовые поставки кофе для бизнеса</p>
+            <p style="color:#999;font-size:12px">10кофе — оптовые поставки кофе для бизнеса</p>
           </div>
         `,
         attachments,
@@ -121,7 +152,7 @@ export async function submitPriceListRequest(
       });
     }
 
-    return { success: true };
+    return { success: true, name };
   } catch {
     return { success: false, error: "Произошла ошибка. Попробуйте позже." };
   }
