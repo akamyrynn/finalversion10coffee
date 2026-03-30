@@ -88,6 +88,7 @@ export default function CheckoutPage() {
   const [officesLoading, setOfficesLoading] = useState(false)
   const [selectedOffice, setSelectedOffice] = useState<CdekOffice | null>(null)
   const [officeFilter, setOfficeFilter] = useState("")
+  const [officesExpanded, setOfficesExpanded] = useState(true)
   const [quickComments, setQuickComments] = useState<string[]>([])
   const citySearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cityDropdownRef = useRef<HTMLDivElement>(null)
@@ -564,6 +565,20 @@ export default function CheckoutPage() {
                         <p className="text-sm text-muted-foreground">
                           Нет доступных пунктов выдачи в этом городе
                         </p>
+                      ) : selectedOffice && !officesExpanded ? (
+                        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-sm">{selectedOffice.name}</div>
+                            <div className="text-muted-foreground text-xs mt-0.5">{selectedOffice.address_full}</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setOfficesExpanded(true)}
+                            className="text-xs text-primary hover:underline shrink-0 ml-3"
+                          >
+                            Изменить
+                          </button>
+                        </div>
                       ) : (
                         <>
                           {offices.length > 5 && (
@@ -588,7 +603,7 @@ export default function CheckoutPage() {
                                 <button
                                   key={office.code}
                                   type="button"
-                                  onClick={() => setSelectedOffice(office)}
+                                  onClick={() => { setSelectedOffice(office); setOfficesExpanded(false); }}
                                   className={`w-full text-left rounded-md p-2.5 text-sm transition-colors ${
                                     selectedOffice?.code === office.code
                                       ? "bg-primary/10 border border-primary/30"

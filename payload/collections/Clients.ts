@@ -163,8 +163,8 @@ export const Clients: CollectionConfig = {
   hooks: {
     afterRead: [
       async ({ doc }) => {
-        // Populate companies from Supabase companies table
-        if (doc.supabaseId && (!doc.companies || doc.companies.length === 0)) {
+        // Always merge companies from Supabase companies table
+        if (doc.supabaseId) {
           try {
             const { createAdminClient } = await import("@/lib/supabase/admin")
             const admin = createAdminClient()
@@ -175,7 +175,7 @@ export const Clients: CollectionConfig = {
               .order("created_at", { ascending: false })
 
             if (data && data.length > 0) {
-              doc.companies = data.map((c: any) => ({
+              const supabaseCompanies = data.map((c: any) => ({
                 name: c.name,
                 inn: c.inn,
                 kpp: c.kpp,
@@ -186,12 +186,55 @@ export const Clients: CollectionConfig = {
                 settlementAccount: c.settlement_account,
                 correspondentAccount: c.correspondent_account,
               }))
+
+              // Merge: Payload companies + Supabase companies (deduplicate by INN)
+              const payloadCompanies = doc.companies || []
+              const existingInns = new Set(payloadCompanies.map((c: any) => c.inn).filter(Boolean))
+              const newFromSupabase = supabaseCompanies.filter((c: any) => !existingInns.has(c.inn))
+              doc.companies = [...payloadCompanies, ...newFromSupabase]
             }
           } catch {
             // Supabase not available
           }
         }
         return doc
+      },
+    ],
+    afterChange: [
+      async ({ doc, operation }) => {
+        // Sync Payload companies → Supabase (when admin creates/updates)
+        if (doc.supabaseId && doc.companies?.length > 0) {
+          try {
+            const { createAdminClient } = await import("@/lib/supabase/admin")
+            const admin = createAdminClient()
+
+            const { data: existing } = await admin
+              .from("companies")
+              .select("inn")
+              .eq("client_id", doc.supabaseId)
+
+            const existingInns = new Set((existing || []).map((c: any) => c.inn))
+
+            for (const company of doc.companies) {
+              if (company.inn && !existingInns.has(company.inn)) {
+                await admin.from("companies").insert({
+                  client_id: doc.supabaseId,
+                  name: company.name || "",
+                  inn: company.inn,
+                  kpp: company.kpp || null,
+                  ogrn: company.ogrn || null,
+                  legal_address: company.legalAddress || null,
+                  bank_name: company.bankName || null,
+                  bik: company.bik || null,
+                  settlement_account: company.settlementAccount || null,
+                  correspondent_account: company.correspondentAccount || null,
+                })
+              }
+            }
+          } catch {
+            // Supabase not available
+          }
+        }
       },
     ],
   },
