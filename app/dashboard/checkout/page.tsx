@@ -40,6 +40,7 @@ import {
 import { ArrowLeft, CheckCircle2, FileText, Loader2, MapPin, Package, Truck } from "lucide-react"
 import { formatPrice, formatWeight } from "@/lib/utils/format"
 import { DELIVERY_METHOD_LABELS, SELF_PICKUP_ADDRESS } from "@/lib/utils/constants"
+import AddressInput from "@/components/shared/address-input"
 import { toast } from "sonner"
 import Link from "next/link"
 import type { Company, DeliveryMethod } from "@/types"
@@ -636,7 +637,7 @@ export default function CheckoutPage() {
                         <FormItem>
                           <FormLabel>Адрес доставки</FormLabel>
                           <FormControl>
-                            <Input placeholder="Улица, дом, квартира" {...field} />
+                            <AddressInput placeholder="Улица, дом, квартира" value={field.value} onChange={field.onChange} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -654,7 +655,7 @@ export default function CheckoutPage() {
                     <FormItem>
                       <FormLabel>Адрес доставки</FormLabel>
                       <FormControl>
-                        <Input placeholder="Город, улица, дом" {...field} />
+                        <AddressInput placeholder="Город, улица, дом" value={field.value} onChange={field.onChange} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
