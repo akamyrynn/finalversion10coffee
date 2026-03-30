@@ -90,6 +90,14 @@ export const MapLocations: CollectionConfig = {
       },
     },
     {
+      name: "coordinates",
+      type: "text",
+      label: "Координаты",
+      admin: {
+        description: "Вставьте из Яндекс.Карт: 43.582661, 39.718557 — автоматически разобьётся на широту и долготу",
+      },
+    },
+    {
       name: "latitude",
       type: "number",
       label: "Широта",
@@ -119,6 +127,21 @@ export const MapLocations: CollectionConfig = {
       },
     },
   ],
+  hooks: {
+    beforeChange: [
+      ({ data }) => {
+        if (data?.coordinates && typeof data.coordinates === "string") {
+          const parts = data.coordinates.split(",").map((s: string) => parseFloat(s.trim()))
+          if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            data.latitude = parts[0]
+            data.longitude = parts[1]
+          }
+          delete data.coordinates
+        }
+        return data
+      },
+    ],
+  },
   access: {
     read: () => true,
     create: ({ req }) => !!req.user,

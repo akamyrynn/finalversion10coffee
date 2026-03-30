@@ -58,7 +58,7 @@
 
 .itemLogo {
   display: block;
-  height: clamp(2rem, 5vw, 5rem);
+  height: clamp(1.5rem, 3.5vw, 3.5rem);
   width: auto;
   user-select: none;
 }

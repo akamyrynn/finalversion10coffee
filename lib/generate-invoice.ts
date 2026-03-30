@@ -330,16 +330,6 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Uint8Array>
   y -= 10
   const valX = CE  // value right edge
 
-  // Скидка
-  if (data.discountAmount && data.discountAmount > 0) {
-    const discLabel = data.discountPercent && data.discountPercent > 0
-      ? `Скидка ${data.discountPercent}%:`
-      : "Скидка:"
-    txtRight(discLabel, valX - 80, y, 9, fontB)
-    txtRight(`-${data.discountAmount.toFixed(2)}`, valX, y, 9, font)
-    y -= 16
-  }
-
   // Итого
   txtRight("Итого:", valX - 80, y, 9, fontB)
   txtRight(data.total.toFixed(2), valX, y, 9, font)
