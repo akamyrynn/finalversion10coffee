@@ -48,7 +48,7 @@ export async function submitServiceRequest(
   try {
     await smtpTransporter.sendMail({
       from: `"10кофе" <${process.env.SMTP_EMAIL}>`,
-      to: "10coffee@mail.ru",
+      to: "10coffeeroasters@gmail.com",
       subject: "Заявка на сервисное обслуживание",
       html: `
         <div style="font-family:sans-serif;max-width:500px;padding:24px">
@@ -86,7 +86,7 @@ export async function submitTrainingRequest(
   try {
     await smtpTransporter.sendMail({
       from: `"10кофе" <${process.env.SMTP_EMAIL}>`,
-      to: "10coffee@mail.ru",
+      to: "10coffeeroasters@gmail.com",
       subject: "Заявка на обучение бариста",
       html: `
         <div style="font-family:sans-serif;max-width:500px;padding:24px">
