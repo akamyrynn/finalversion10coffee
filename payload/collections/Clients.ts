@@ -201,21 +201,23 @@ export const Clients: CollectionConfig = {
       },
     ],
     afterChange: [
-      async ({ doc, operation }) => {
-        // Sync Payload companies → Supabase (when admin creates/updates)
-        if (doc.supabaseId && doc.companies?.length > 0) {
+      async ({ doc }) => {
+        // Sync Payload companies → Supabase (add new + delete removed)
+        if (doc.supabaseId) {
           try {
             const { createAdminClient } = await import("@/lib/supabase/admin")
             const admin = createAdminClient()
 
             const { data: existing } = await admin
               .from("companies")
-              .select("inn")
+              .select("id, inn")
               .eq("client_id", doc.supabaseId)
 
             const existingInns = new Set((existing || []).map((c: any) => c.inn))
+            const payloadInns = new Set((doc.companies || []).map((c: any) => c.inn).filter(Boolean))
 
-            for (const company of doc.companies) {
+            // Add new companies to Supabase
+            for (const company of (doc.companies || [])) {
               if (company.inn && !existingInns.has(company.inn)) {
                 await admin.from("companies").insert({
                   client_id: doc.supabaseId,
@@ -229,6 +231,13 @@ export const Clients: CollectionConfig = {
                   settlement_account: company.settlementAccount || null,
                   correspondent_account: company.correspondentAccount || null,
                 })
+              }
+            }
+
+            // Delete companies from Supabase that were removed in Payload
+            for (const ex of (existing || [])) {
+              if (ex.inn && !payloadInns.has(ex.inn)) {
+                await admin.from("companies").delete().eq("id", ex.id)
               }
             }
           } catch {

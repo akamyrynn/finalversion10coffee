@@ -3,6 +3,7 @@ import { getClientCompanies } from "@/lib/actions/companies"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Building2, Pencil, Plus } from "lucide-react"
+import { DeleteCompanyButton } from "./delete-button"
 
 export default async function CompaniesPage() {
   const companies = await getClientCompanies()
@@ -50,11 +51,14 @@ export default async function CompaniesPage() {
                       ИНН: {company.inn}
                     </p>
                   </div>
-                  <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-                    <Link href={`/dashboard/companies/${company.id}`}>
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                      <Link href={`/dashboard/companies/${company.id}`}>
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <DeleteCompanyButton companyId={company.id} companyName={company.name} />
+                  </div>
                 </div>
                 {company.legal_address && (
                   <p className="text-sm text-muted-foreground">
