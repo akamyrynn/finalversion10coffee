@@ -1,37 +1,52 @@
 "use client";
 
-import { ExternalLink, ShoppingBag, Store, Truck, MessageCircle } from "lucide-react";
 import Copy from "./_shared/Copy";
 import styles from "./WhereToBuy.module.css";
 
+function OzonIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true" className={styles.marketIcon}>
+      <rect width="48" height="48" rx="12" fill="#005BFF" />
+      <circle cx="24" cy="24" r="10" fill="#FFFFFF" />
+      <circle cx="24" cy="24" r="5" fill="#005BFF" />
+    </svg>
+  );
+}
+
+function YandexMarketIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true" className={styles.marketIcon}>
+      <rect width="48" height="48" rx="12" fill="#FFCC00" />
+      <path d="M24 10C16.8 10 11 15.8 11 23s5.8 13 13 13 13-5.8 13-13S31.2 10 24 10Zm0 19.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13Z" fill="#1D1D1B" />
+      <path d="M28.7 31.2 35 38" stroke="#E31E24" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WildberriesIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true" className={styles.marketIcon}>
+      <rect width="48" height="48" rx="12" fill="#B61B72" />
+      <path d="M10 17h5.5l3 14 3.7-14h4.2l3.7 14 3-14H38l-5.3 20h-5l-3.4-12.5L20.8 37h-5.2L10 17Z" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
 const MARKETPLACES = [
   {
-    name: "Ozon",
-    text: "Кофе в зернах, чай и товары для ежедневных заказов",
+    name: "OZON",
     href: "https://www.ozon.ru/category/kofe-v-zernah-31009/10coffee-100159106/",
-    icon: ShoppingBag,
-    tone: "orange",
+    icon: OzonIcon,
   },
   {
     name: "Яндекс Маркет",
-    text: "Быстрый поиск 10coffee на маркетплейсе",
     href: "https://market.yandex.ru/search?text=10coffee",
-    icon: Store,
-    tone: "yellow",
+    icon: YandexMarketIcon,
   },
   {
     name: "Wildberries",
-    text: "Площадка для розничной покупки и доставки",
     href: "https://www.wildberries.ru/catalog/0/search.aspx?search=10coffee",
-    icon: Truck,
-    tone: "purple",
-  },
-  {
-    name: "Менеджер 10coffee",
-    text: "Для оптовых заявок, консультаций и подбора ассортимента",
-    href: "https://t.me/Tencoffeesochi",
-    icon: MessageCircle,
-    tone: "dark",
+    icon: WildberriesIcon,
   },
 ] as const;
 
@@ -39,15 +54,6 @@ export default function WhereToBuy() {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.header}>
-          <Copy type="lines" animateOnScroll>
-            <p className="mono">Где купить</p>
-          </Copy>
-          <Copy type="lines" animateOnScroll>
-            <h3>10coffee на популярных площадках</h3>
-          </Copy>
-        </div>
-
         <div className={styles.grid}>
           {MARKETPLACES.map((item) => {
             const Icon = item.icon;
@@ -59,21 +65,18 @@ export default function WhereToBuy() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.card}
-                data-tone={item.tone}
               >
-                <span className={styles.iconWrap}>
-                  <Icon className={styles.icon} />
-                </span>
-                <span className={styles.cardBody}>
-                  <span className={styles.cardTitle}>{item.name}</span>
-                  <span className={styles.cardText}>{item.text}</span>
-                </span>
-                <span className={styles.arrow} aria-hidden="true">
-                  <ExternalLink className={styles.arrowIcon} />
-                </span>
+                <Icon />
+                <span className={styles.cardTitle}>{item.name}</span>
               </a>
             );
           })}
+        </div>
+
+        <div className={styles.title}>
+          <Copy type="lines" animateOnScroll>
+            <h3>ГДЕ КУПИТЬ</h3>
+          </Copy>
         </div>
       </div>
     </section>

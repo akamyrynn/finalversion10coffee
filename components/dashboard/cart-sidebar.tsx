@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Trash2, Send, Minus, Plus, FileText, ShoppingBag, X, Coffee, Loader2 } from "lucide-react"
+import { Trash2, Send, Minus, Plus, FileText, ShoppingBag, X, Coffee, Loader2, ChevronDown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { formatPrice, formatWeight } from "@/lib/utils/format"
 import { useCart } from "@/providers/cart-provider"
 import { validatePromoCode } from "@/lib/actions/promo"
-import { calculateClientDiscount, type CategoryDiscountRule } from "@/lib/discounts"
+import { calculateClientDiscount, type CategoryDiscountRule, type ClientDiscountResult } from "@/lib/discounts"
 import { toast } from "sonner"
 import type { CartItem } from "@/types"
 
@@ -23,6 +23,46 @@ interface CartSidebarProps {
   categoryDiscounts?: CategoryDiscountRule[]
 }
 
+interface CartDiscountLine {
+  key: string
+  label: string
+  amount: number
+}
+
+function formatDiscountPercent(percent: number) {
+  return Number.isInteger(percent)
+    ? String(percent)
+    : percent.toLocaleString("ru-RU", { maximumFractionDigits: 1 })
+}
+
+function buildClientDiscountLines(result: ClientDiscountResult): CartDiscountLine[] {
+  const grouped = new Map<string, CartDiscountLine>()
+
+  for (const line of result.lines) {
+    const isCategoryDiscount = line.source === "category"
+    const key = isCategoryDiscount
+      ? `category:${line.categoryId}:${line.discountPercent}`
+      : `base:${line.discountPercent}`
+    const categorySuffix = isCategoryDiscount && line.categoryName
+      ? ` · ${line.categoryName}`
+      : ""
+    const label = `Скидка ${formatDiscountPercent(line.discountPercent)}%${categorySuffix}`
+    const existing = grouped.get(key)
+
+    if (existing) {
+      existing.amount += line.discountAmount
+    } else {
+      grouped.set(key, {
+        key,
+        label,
+        amount: line.discountAmount,
+      })
+    }
+  }
+
+  return Array.from(grouped.values())
+}
+
 export function CartSidebar({
   items,
   onUpdateQuantity,
@@ -36,6 +76,7 @@ export function CartSidebar({
 }: CartSidebarProps) {
   const { appliedPromo, setAppliedPromo } = useCart()
   const [promoInput, setPromoInput] = useState("")
+  const [promoExpanded, setPromoExpanded] = useState(false)
   const [promoLoading, setPromoLoading] = useState(false)
 
   const totalPrice = items.reduce((sum, item) => {
@@ -61,9 +102,17 @@ export function CartSidebar({
 
   // Use the greater of the two discounts
   const currentDiscount = Math.max(promoDiscount, clientDiscountAmount)
-  const activeDiscountLabel = currentDiscount > 0
-    ? (clientDiscountAmount > promoDiscount ? clientDiscountResult.label : undefined)
-    : undefined
+  const discountLines = clientDiscountAmount > promoDiscount
+    ? buildClientDiscountLines(clientDiscountResult)
+    : promoDiscount > 0
+      ? [{
+          key: "promo",
+          label: appliedPromo?.discountType === "percentage"
+            ? `Промокод ${formatDiscountPercent(appliedPromo.discountValue)}%`
+            : "Промокод",
+          amount: promoDiscount,
+        }]
+      : []
   const finalPrice = Math.max(0, totalPrice - currentDiscount)
 
   async function handleApplyPromo() {
@@ -78,6 +127,7 @@ export function CartSidebar({
         discountValue: result.discountValue,
       })
       toast.success(`Промокод применён! Скидка: ${result.calculatedDiscount.toLocaleString("ru-RU")} ₽`)
+      setPromoExpanded(false)
     } else {
       toast.error(result.error)
     }
@@ -87,6 +137,7 @@ export function CartSidebar({
   function handleRemovePromo() {
     setAppliedPromo(null)
     setPromoInput("")
+    setPromoExpanded(false)
   }
 
   const DEFAULT_PRICE_LIST = "/Прайс 10coffee_ Март 2026г. (1).pdf"
@@ -173,39 +224,31 @@ export function CartSidebar({
         </div>
 
       {/* Bottom */}
-      <div className="px-3 pb-3 sm:px-5 sm:pb-5 space-y-2 sm:space-y-3">
+        <div className="px-3 pb-3 sm:px-5 sm:pb-5 space-y-2.5">
         {items.length > 0 && (
           <>
             {/* Total block */}
-            <div className="bg-gradient-to-r bg-[#faead5] rounded-xl p-3 space-y-1.5">
-              {currentDiscount > 0 && (
-                <>
-                  <div className="flex items-end justify-between">
-                    <span className="text-[11px] text-neutral-400">Товары</span>
-                    <span className="text-[13px] font-semibold text-neutral-600">
-                      {Math.round(totalPrice).toLocaleString("ru-RU")} ₽
-                    </span>
-                  </div>
+            <div className="bg-[#faead5] rounded-xl p-3 space-y-2">
+              <div className="flex items-end justify-between">
+                <span className="text-[11px] text-neutral-400">Товары</span>
+                <span className="text-[13px] font-semibold text-neutral-600">
+                  {Math.round(totalPrice).toLocaleString("ru-RU")} ₽
+                </span>
+              </div>
+
+              {discountLines.map((line) => (
+                <div key={line.key} className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] text-green-600 font-medium truncate">
+                    {line.label}
+                  </span>
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-green-600 font-medium">
-                      {activeDiscountLabel || "Скидка"}
+                    <span className="text-[13px] font-bold text-green-600 whitespace-nowrap">
+                      −{line.amount.toLocaleString("ru-RU")} ₽
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-bold text-green-600">
-                        −{currentDiscount.toLocaleString("ru-RU")} ₽
-                      </span>
-                      {appliedPromo && (
-                        <button
-                          onClick={handleRemovePromo}
-                          className="h-4 w-4 rounded flex items-center justify-center text-neutral-300 hover:text-red-500 transition-colors"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      )}
-                    </div>
                   </div>
-                </>
-              )}
+                </div>
+              ))}
+
               <div className="flex items-end justify-between gap-2">
                 <span className="text-[12px] text-neutral-400 uppercase tracking-wider font-medium shrink-0">Итого</span>
                 <span className="text-lg font-black text-neutral-900 truncate text-right">
@@ -216,7 +259,7 @@ export function CartSidebar({
 
             {/* Promo code */}
             {appliedPromo ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-green-50 border border-green-100">
+              <div className="flex h-10 items-center gap-2 px-3 rounded-xl bg-green-50 border border-green-100">
                 <span className="text-[12px] font-semibold text-green-700 flex-1 truncate">
                   Промокод применён
                 </span>
@@ -227,30 +270,40 @@ export function CartSidebar({
                   Отменить
                 </button>
               </div>
-            ) : (
+            ) : promoExpanded ? (
               <div className="flex gap-2">
                 <Input
                   value={promoInput}
+                  autoFocus
                   onChange={(e) => setPromoInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
                   placeholder="Промокод"
-                  className="h-10 text-[12px] rounded-xl border-neutral-200 bg-neutral-50 flex-1 min-w-0"
+                  className="h-10 text-[13px] rounded-xl border-neutral-200 bg-white flex-1 min-w-0 shadow-sm"
                 />
                 <button
                   onClick={handleApplyPromo}
                   disabled={promoLoading || !promoInput.trim()}
-                  className="h-10 px-4 bg-neutral-900 text-white text-[11px] font-bold rounded-xl hover:bg-neutral-800 transition-colors shrink-0 disabled:opacity-50 flex items-center gap-1.5"
+                  className="h-10 min-w-12 px-3 bg-neutral-500 text-white text-[11px] font-bold rounded-xl hover:bg-neutral-700 transition-colors shrink-0 disabled:opacity-60 flex items-center justify-center"
                 >
                   {promoLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "OK"}
                 </button>
               </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPromoExpanded(true)}
+                className="flex h-10 w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 text-left text-[13px] font-medium text-neutral-900 shadow-sm hover:border-neutral-300 transition-colors"
+              >
+                <span>Промокод</span>
+                <ChevronDown className="h-4 w-4 text-neutral-400" />
+              </button>
             )}
 
             {/* Checkout */}
             <Link
               href="/dashboard/checkout"
               onClick={() => onClose?.()}
-              className="flex items-center justify-center w-full h-11 sm:h-12 bg-[#5b328a] text-white text-[13px] font-bold tracking-wide rounded-xl hover:bg-[#4a2870] transition-all hover:shadow-lg hover:shadow-[#5b328a]/20 active:scale-[0.98]"
+              className="flex items-center justify-center w-full h-[30px] bg-[#5b328a] text-white text-[12px] font-bold tracking-wide rounded-xl hover:bg-[#4a2870] transition-all hover:shadow-lg hover:shadow-[#5b328a]/20 active:scale-[0.98]"
             >
               Оформить заказ
             </Link>
@@ -262,9 +315,9 @@ export function CartSidebar({
           <a
             href={priceListHref}
             download
-            className="flex-1 flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-[#faead5]/80 hover:bg-[#faead5] transition-colors text-center"
+            className="flex-1 h-10 flex items-center justify-center gap-2 px-2.5 rounded-xl bg-[#faead5]/80 hover:bg-[#faead5] transition-colors text-center"
           >
-            <div className="h-7 w-7 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm">
+            <div className="h-7 w-7 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
               <FileText className="h-3.5 w-3.5 text-[#5b328a]" />
             </div>
             <p className="text-[11px] font-bold text-[#1d1d1b] leading-tight">Прайс-лист</p>
@@ -274,9 +327,9 @@ export function CartSidebar({
             href="tg://resolve?domain=Tencoffeesochi"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-[#e8f4fd]/80 hover:bg-[#d4ecfa] transition-colors text-center"
+            className="flex-1 h-10 flex items-center justify-center gap-2 px-2.5 rounded-xl bg-[#e8f4fd]/80 hover:bg-[#d4ecfa] transition-colors text-center"
           >
-            <div className="h-7 w-7 rounded-lg bg-[#2AABEE] flex items-center justify-center shrink-0 shadow-sm">
+            <div className="h-7 w-7 rounded-full bg-[#2AABEE] flex items-center justify-center shrink-0 shadow-sm">
               <Send className="h-3 w-3 text-white" />
             </div>
             <p className="text-[11px] font-bold text-neutral-900 leading-tight">Менеджер</p>

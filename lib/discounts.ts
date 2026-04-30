@@ -14,6 +14,7 @@ export interface ClientDiscountConfig {
 export interface ClientDiscountLine {
   cartItemId: string
   categoryId: string
+  categoryName?: string
   subtotal: number
   discountPercent: number
   discountAmount: number
@@ -82,6 +83,7 @@ export function calculateClientDiscount(
       lines.push({
         cartItemId: item.id,
         categoryId,
+        categoryName: categoryRule?.categoryName,
         subtotal,
         discountPercent,
         discountAmount,
