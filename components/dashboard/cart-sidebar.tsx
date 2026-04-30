@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Trash2, Send, Minus, Plus, FileText, ShoppingBag, X, Coffee, Loader2, ChevronDown } from "lucide-react"
+import { Trash2, Send, Minus, Plus, FileText, ShoppingBag, X, Coffee, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { formatPrice, formatWeight } from "@/lib/utils/format"
 import { useCart } from "@/providers/cart-provider"
@@ -292,10 +292,9 @@ export function CartSidebar({
               <button
                 type="button"
                 onClick={() => setPromoExpanded(true)}
-                className="flex h-10 w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 text-left text-[13px] font-medium text-neutral-900 shadow-sm hover:border-neutral-300 transition-colors"
+                className="w-fit text-[12px] font-medium text-neutral-400 hover:text-[#5b328a] transition-colors"
               >
-                <span>Промокод</span>
-                <ChevronDown className="h-4 w-4 text-neutral-400" />
+                Есть промокод?
               </button>
             )}
 

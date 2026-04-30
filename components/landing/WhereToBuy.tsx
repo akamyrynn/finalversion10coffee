@@ -54,30 +54,32 @@ export default function WhereToBuy() {
   return (
     <section className={styles.section}>
       <div className={styles.container}>
-        <div className={styles.grid}>
-          {MARKETPLACES.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <a
-                key={item.name}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.card}
-              >
-                <Icon />
-                <span className={styles.cardTitle}>{item.name}</span>
-              </a>
-            );
-          })}
-        </div>
-
-        <div className={styles.title}>
-          <Copy type="lines" animateOnScroll>
+        <div className={styles.left}>
+          <Copy type="words" animateOnScroll>
             <h3>ГДЕ КУПИТЬ</h3>
           </Copy>
+
+          <div className={styles.grid}>
+            {MARKETPLACES.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.card}
+                >
+                  <Icon />
+                  <span className={styles.cardTitle}>{item.name}</span>
+                </a>
+              );
+            })}
+          </div>
         </div>
+
+        <div className={styles.right} aria-hidden="true" />
       </div>
     </section>
   );
