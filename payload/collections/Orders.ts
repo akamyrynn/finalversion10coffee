@@ -3,6 +3,7 @@ import { calculateOrderLineDiscounts } from "@/lib/order-line-discounts"
 import { dbQuery } from "@/lib/db"
 import { getMoyskladConfig } from "@/lib/moysklad/config"
 import { retryFailedMoyskladOrders } from "@/lib/moysklad/order-retry"
+import { handleOrderLinkRepair } from "@/lib/moysklad/order-link-endpoint"
 import { canReadOperations, canRunIntegrations, getAllowedSalesChannels, operationsCreateAccess, operationsDeleteAccess, operationsUpdateAccess } from "../access/adminRoles"
 import { orderWorkspaceBaseFilter } from "../admin/workspace"
 import { accrueLoyaltyForDeliveredOrder, releaseLoyaltyReservation, reverseLoyaltyForReturnedOrder } from "@/lib/loyalty"
@@ -63,6 +64,7 @@ export const Orders: CollectionConfig = {
   },
 
   endpoints: [
+    { path: "/moysklad/relink", method: "post", handler: handleOrderLinkRepair },
     {
       path: "/moysklad/retry",
       method: "post",
@@ -467,6 +469,11 @@ export const Orders: CollectionConfig = {
       type: "number",
       label: "Вес (г)",
       admin: { position: "sidebar" },
+    },
+    {
+      name: "moyskladLinkRepair",
+      type: "ui",
+      admin: { components: { Field: "/payload/components/MoyskladOrderLinkRepair" }, position: "sidebar" },
     },
     {
       name: "moyskladSyncStatus",

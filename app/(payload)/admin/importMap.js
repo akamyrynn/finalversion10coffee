@@ -1,4 +1,5 @@
 import { default as default_2c0fc6b26878d090320397abae54b471 } from '../../../payload/components/OrderSubtotalField'
+import { default as default_6a204e64c523e2c273ea9d9429f83351 } from '../../../payload/components/MoyskladOrderLinkRepair'
 import { default as default_85e396daa2ab3886aa9428cc84e9471e } from '../../../payload/components/OrderClientCompanyField'
 import { default as default_0f3c28c0f569dde18fb1427e58cc1418 } from '../../../payload/components/OrderItemProductPicker'
 import { default as default_0ef052de648d309538212e8af9eb37d1 } from '../../../payload/components/MoyskladOrderRetryButton'
@@ -40,8 +41,10 @@ import { default as default_c463efc4ecef0c45aeb8ffabbb51cf57 } from '../../../pa
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
+/** @type import('payload').ImportMap */
 export const importMap = {
   "/payload/components/OrderSubtotalField#default": default_2c0fc6b26878d090320397abae54b471,
+  "/payload/components/MoyskladOrderLinkRepair#default": default_6a204e64c523e2c273ea9d9429f83351,
   "/payload/components/OrderClientCompanyField#default": default_85e396daa2ab3886aa9428cc84e9471e,
   "/payload/components/OrderItemProductPicker#default": default_0f3c28c0f569dde18fb1427e58cc1418,
   "/payload/components/MoyskladOrderRetryButton#default": default_0ef052de648d309538212e8af9eb37d1,

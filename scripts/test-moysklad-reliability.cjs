@@ -9,7 +9,7 @@ const ts = require('typescript')
 const root = path.resolve(__dirname, '..')
 const compiled = new Map()
 
-function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onDelay } = {}) {
+function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onDelay, dbConnection } = {}) {
   const calls = [], waits = [], updates = []
   const config = {
     enabled: true, syncOrdersOnCreate: true, authMode: 'bearer', token: 'test-only',
@@ -38,7 +38,10 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
     'lib/moysklad/config': { getMoyskladConfig: () => config, assertMoyskladReady() {} },
     'lib/moysklad/logs': { writeMoyskladLog: async () => {} },
     'lib/utils/constants': { DELIVERY_METHOD_LABELS: {} },
-    'lib/db': { dbQuery: async () => { throw new Error('Unexpected SQL mutation') } },
+    'lib/db': { dbQuery: async () => { throw new Error('Unexpected SQL mutation') }, getPool: () => ({ connect: async () => {
+      if (!dbConnection) throw new Error('Unexpected database connection')
+      return dbConnection
+    } }) },
     'node:timers/promises': { setTimeout: async (ms, value, options) => {
       waits.push(ms)
       await onDelay?.()
@@ -59,12 +62,13 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
       const target = id.startsWith('@/') ? id.slice(2) : id.startsWith('.')
         ? path.posix.normalize(path.posix.join(path.posix.dirname(file), id)) : id
       if (Object.hasOwn(mocks, target)) return mocks[target]
-      if (target === 'crypto') return require('node:crypto')
-      if (['lib/moysklad/client', 'lib/moysklad/sync', 'lib/moysklad/bundles', 'lib/moysklad/order-totals', 'lib/moysklad/order-link-repair', 'lib/moysklad/order-hash'].includes(target)) return load(target)
+      if (['crypto', 'node:crypto'].includes(target)) return require('node:crypto')
+      if (target === 'node:util') return require('node:util')
+      if (['lib/moysklad/client', 'lib/moysklad/sync', 'lib/moysklad/bundles', 'lib/moysklad/order-totals', 'lib/moysklad/order-link-repair', 'lib/moysklad/order-hash', 'lib/moysklad/order-link-service', 'lib/moysklad/order-link-endpoint', 'payload/access/adminRoles'].includes(target)) return load(target)
       throw new Error(`Unexpected dependency: ${id}`)
     }
     vm.runInNewContext(`(function(require,module,exports){${compiled.get(file)}\n})`, {
-      fetch: fetchMock, AbortSignal: signalAPI, Buffer, URLSearchParams,
+      fetch: fetchMock, AbortSignal: signalAPI, Buffer, URLSearchParams, URL, Response,
       TypeError, Error, console: { error() {} },
     }, { filename: file })(localRequire, loaded, loaded.exports)
     return loaded.exports
@@ -97,6 +101,135 @@ function repairFixture() {
   const expected = { orderNumber: 'TEST-179', total: 19192, counterpartyId: 'buyer', organizationId: 'org' }
   return { order, items, doc, invoice, expected }
 }
+
+function repairServiceFixture(fault = '') {
+  const clone = value => JSON.parse(JSON.stringify(value))
+  const x = repairFixture()
+  const ids = {
+    order: '11111111-1111-1111-1111-111111111111', invoice: '22222222-2222-2222-2222-222222222222',
+    buyer: '33333333-3333-3333-3333-333333333333', org: '44444444-4444-4444-4444-444444444444',
+  }
+  x.order.id = 160; x.order.sales_channel = 'wholesale'; x.order.moysklad_counterparty_id = ids.buyer
+  x.order.moysklad_customer_order_id = null; x.order.moysklad_invoice_out_id = null
+  x.doc.id = ids.order; x.invoice.id = ids.invoice
+  x.invoice.customerOrder.meta.href = `/customerorder/${ids.order}`
+  x.doc.invoicesOut = [{ meta: { href: `/invoiceout/${ids.invoice}` } }]
+  for (const d of [x.doc, x.invoice]) {
+    d.agent.meta.href = `/counterparty/${ids.buyer}`; d.organization.meta.href = `/organization/${ids.org}`
+  }
+  let row = clone(x.order), rows = clone(x.items), backup
+  const queries = [], logs = [], original = clone(row)
+  const dbConnection = { release() {}, async query(sql, values = []) {
+    queries.push(sql)
+    if (sql.startsWith('BEGIN')) { backup = { row: clone(row), rows: clone(rows), logs: logs.slice() }; return { rows: [] } }
+    if (sql.startsWith('SET LOCAL') || sql === 'COMMIT') return { rows: [] }
+    if (sql === 'ROLLBACK') { row = backup.row; rows = backup.rows; logs.splice(0, logs.length, ...backup.logs); return { rows: [] } }
+    if (sql.startsWith('SELECT to_jsonb')) return { rows: [{ row: clone(row) }] }
+    if (sql.startsWith('SELECT * FROM orders_items')) return { rows: clone(rows) }
+    if (sql.startsWith('SELECT id FROM orders')) return { rows: fault === 'duplicate' ? [{ id: 999 }] : [] }
+    if (sql.startsWith('INSERT INTO')) {
+      if (fault === 'audit') throw new Error('audit unavailable')
+      logs.push({ previous: JSON.parse(values[3]), plan: JSON.parse(values[4]) })
+      return { rows: [] }
+    }
+    if (sql.startsWith('UPDATE orders SET')) {
+      const assignments = sql.split('SET')[1].split('WHERE')[0].split(',')
+      for (const assignment of assignments) {
+        const match = assignment.trim().match(/^(\w+)\s*=\s*(\$\d+|'[^']*'|NOW\(\))$/)
+        assert.ok(match, assignment)
+        const [, key, expression] = match
+        row[key] = expression.startsWith('$') ? values[Number(expression.slice(1)) - 1]
+          : expression === 'NOW()' ? '2026-09-07T14:00:00Z' : expression.slice(1, -1)
+      }
+      if (fault === 'trigger') row.payment_status = 'paid'
+      return { rows: [], rowCount: 1 }
+    }
+    throw new Error(`Unexpected SQL: ${sql}`)
+  } }
+  const f = fixture({ dbConnection, config: { organizationId: ids.org }, respond: call => {
+    assert.equal(call.method, 'GET', 'recovery must never write to MoySklad')
+    if (call.path.startsWith('entity/customerorder?')) return Response.json({ rows: fault === 'ambiguous' ? [{ id: ids.order }, { id: ids.invoice }] : [{ id: ids.order }], meta: { size: fault === 'ambiguous' ? 2 : 1 } })
+    const doc = clone(call.path.startsWith('entity/invoiceout/') ? x.invoice : x.doc)
+    if (fault === 'remote-change' && queries.some(q => q.startsWith('UPDATE'))) doc.updated = '2026-09-08'
+    return Response.json(doc)
+  } })
+  return { ...f, queries, logs, original, getRow: () => clone(row), changeAddress: () => { row.delivery_address = 'Changed after preview' } }
+}
+
+test('admin preview reads only; apply changes only six metadata fields and commits the backup in the same transaction', async () => {
+  const f = repairServiceFixture(), service = f.load('lib/moysklad/order-link-service')
+  const plan = await service.repairMoyskladOrderLink({ orderId: 160 })
+  assert.equal(plan.changed, false)
+  assert.deepEqual(f.getRow(), f.original)
+  assert.equal(f.queries.some(q => /^(INSERT|UPDATE)/.test(q)), false)
+  const result = await service.repairMoyskladOrderLink({ orderId: 160, apply: true, fingerprint: plan.fingerprint, actorId: 7 })
+  assert.equal(result.changed, true)
+  assert.equal(f.getRow().moysklad_customer_order_id, plan.remoteId)
+  assert.equal(f.getRow().moysklad_invoice_out_id, plan.invoiceId)
+  assert.equal(f.getRow().payment_status, 'pending')
+  const repair = f.load('lib/moysklad/order-link-repair')
+  assert.deepEqual(repair.orderWithoutRepairMetadata(f.getRow()), repair.orderWithoutRepairMetadata(f.original))
+  assert.equal(f.logs.length, 1)
+  assert.equal(f.logs[0].previous.actorId, 7)
+  assert.equal(f.logs[0].previous.previous.moysklad_customer_order_id, null)
+  assert.equal(f.queries.at(-1), 'COMMIT')
+  const again = await service.repairMoyskladOrderLink({ orderId: 160, apply: true, fingerprint: plan.fingerprint })
+  assert.equal(again.alreadyLinked, true)
+  assert.equal(f.logs.length, 1)
+})
+
+for (const fault of ['ambiguous', 'duplicate', 'audit', 'trigger', 'remote-change']) {
+  test(`admin link recovery leaves all data unchanged when ${fault} check fails`, async () => {
+    const f = repairServiceFixture(fault), service = f.load('lib/moysklad/order-link-service')
+    if (['ambiguous', 'duplicate'].includes(fault)) await assert.rejects(service.repairMoyskladOrderLink({ orderId: 160 }))
+    else {
+      const plan = await service.repairMoyskladOrderLink({ orderId: 160 })
+      await assert.rejects(service.repairMoyskladOrderLink({ orderId: 160, apply: true, fingerprint: plan.fingerprint }))
+    }
+    assert.deepEqual(f.getRow(), f.original)
+    assert.equal(f.logs.length, 0)
+    assert.equal(f.queries.includes('COMMIT'), false)
+    if (['trigger', 'remote-change'].includes(fault)) assert.ok(f.queries.some(q => q.startsWith('UPDATE')))
+  })
+}
+
+test('stale preview and disallowed workspace cannot apply a link', async () => {
+  const f = repairServiceFixture(), service = f.load('lib/moysklad/order-link-service')
+  await assert.rejects(service.repairMoyskladOrderLink({ orderId: 160, allowedSalesChannels: ['retail'] }), /Нет доступа/)
+  const plan = await service.repairMoyskladOrderLink({ orderId: 160 })
+  f.changeAddress()
+  await assert.rejects(service.repairMoyskladOrderLink({ orderId: 160, apply: true, fingerprint: plan.fingerprint }), /изменились после проверки/)
+  assert.equal(f.queries.some(q => /^(INSERT|UPDATE)/.test(q)), false)
+})
+
+test('link endpoint rejects customers, unauthorized staff, cross-site requests and apply without preview', async () => {
+  const f = fixture(), endpoint = f.load('lib/moysklad/order-link-endpoint')
+  const req = { url: 'https://10coffee.test/api/orders/moysklad/relink', user: { id: 1, collection: 'admins', role: 'admin' },
+    headers: new Headers({ 'content-type': 'application/json', origin: 'https://10coffee.test', host: '10coffee.test' }), json: async () => ({ orderId: 160, mode: 'preview' }) }
+  for (const user of [null, { collection: 'clients', role: 'admin' }, { collection: 'admins', role: 'support' }]) {
+    assert.equal((await endpoint.handleOrderLinkRepair({ ...req, user })).status, 403)
+  }
+  assert.equal((await endpoint.handleOrderLinkRepair({ ...req, headers: new Headers({ 'content-type': 'application/json', origin: 'https://evil.test', host: '10coffee.test' }) })).status, 403)
+  assert.equal((await endpoint.handleOrderLinkRepair({ ...req, json: async () => ({ orderId: 160, mode: 'apply' }) })).status, 400)
+  assert.equal((await endpoint.handleOrderLinkRepair({ ...req, json: async () => ({ orderId: 0, mode: 'preview' }) })).status, 400)
+  assert.equal(f.calls.length, 0)
+})
+
+test('authorized admin endpoint previews then applies the displayed link with an audit record', async () => {
+  const f = repairServiceFixture(), endpoint = f.load('lib/moysklad/order-link-endpoint')
+  const req = { url: 'https://10coffee.test/api/orders/moysklad/relink', user: { id: 7, collection: 'admins', role: 'integration_operator' },
+    headers: new Headers({ 'content-type': 'application/json', origin: 'https://10coffee.test', host: '10coffee.test' }), json: async () => ({ orderId: 160, mode: 'preview' }) }
+  const previewResponse = await endpoint.handleOrderLinkRepair(req)
+  assert.equal(previewResponse.status, 200)
+  const plan = await previewResponse.json()
+  assert.equal(plan.ok, true)
+  assert.equal(f.logs.length, 0)
+  const applyResponse = await endpoint.handleOrderLinkRepair({ ...req, json: async () => ({ orderId: 160, mode: 'apply', fingerprint: plan.fingerprint }) })
+  assert.equal(applyResponse.status, 200)
+  assert.equal((await applyResponse.json()).changed, true)
+  assert.equal(f.getRow().moysklad_customer_order_id, plan.remoteId)
+  assert.equal(f.logs[0].previous.actorId, 7)
+})
 
 test('link repair validates both existing documents without changing business data and uses the normal order hash', () => {
   const f = fixture(), repair = f.load('lib/moysklad/order-link-repair')

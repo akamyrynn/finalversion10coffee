@@ -68,7 +68,11 @@ node scripts/moysklad-maintenance.mjs retry --ids 123,124 --force
 
 Replace the example IDs with verified IDs. This updates existing orders and invoices; paid/shipped documents require separate reconciliation. `--force` requires `--ids`. Without arguments, `retry` retains the existing full-sweep behavior. Normal admin retries skip unchanged synced orders.
 
-To restore a lost link to an already existing order and invoice, first run a read-only check:
+To restore a lost link without server-terminal access, open the existing order in Payload. The **Связь с существующим заказом МойСклад** panel appears when a remote order or invoice ID is missing. Choose **Проверить связь с МойСклад**, review the matching company, item, amount and invoice, then choose **Восстановить связь**. Reload the card using its link to see the saved IDs. The ordinary bulk retry button does not perform this repair.
+
+Only staff with integration permissions can use this operation. The server verifies both documents during preview and again on apply. A stale preview, ambiguous match, different counterparty, conflicting local link, changed document or missing audit log aborts the operation. The transaction records the previous six metadata fields in `moysklad_sync_logs` alongside the operator ID before updating the link. It never writes to MoySklad and does not change the site's order number, contents, totals or payment/fulfilment statuses. The CLI uses this same service.
+
+Alternatively, to restore a lost link from the application terminal, first run a read-only check:
 
 ```sh
 node scripts/moysklad-maintenance.mjs relink --order-id ID --order-number NUMBER --remote-order-id UUID --remote-invoice-id UUID --expect-total RUB --expect-counterparty-id UUID

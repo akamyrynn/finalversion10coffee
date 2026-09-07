@@ -9,6 +9,7 @@ export interface RepairRemoteDocument {
   agent: { meta: { href: string } }
   organization: { meta: { href: string } }
   customerOrder?: { meta: { href: string } }
+  invoicesOut?: { meta: { href: string } }[]
   positions: { rows: { quantity: number; price: number; discount: number; assortment: { name: string } }[]; meta: { size: number } }
 }
 
