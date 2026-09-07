@@ -27,7 +27,6 @@ interface FinalResult {
   failed?: number
   trashedSkipped?: number
   skippedTotal?: number
-  excludedOrders?: { id: string | number; orderId?: string; reason: string }[]
   retried?: RetryOrderResult[]
 }
 
@@ -277,11 +276,6 @@ export default function MoyskladOrderRetryButton() {
               )}
             </div>
           )}
-          {final.excludedOrders?.map((order) => (
-            <div key={String(order.id)} style={{ marginTop: "6px" }}>
-              {order.orderId || order.id}: пропущен — {order.reason}.
-            </div>
-          ))}
         </div>
       )}
     </div>
