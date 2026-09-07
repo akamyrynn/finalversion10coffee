@@ -732,26 +732,14 @@ async function findInvoiceOutByExternalCode(externalCode: string) {
   return result.rows[0] || null
 }
 
-async function findArchivedInvoiceOutByExternalCode(externalCode: string) {
-  const result = await moyskladGetList<MoyskladInvoiceOut>("entity/invoiceout", {
-    filter: `externalCode=${externalCode};archived=true`,
-    limit: 1,
-  })
-
-  return result.rows[0] || null
-}
-
-async function findArchivedCustomerOrderByExternalCode(externalCode: string) {
-  const result = await moyskladGetList<MoyskladCustomerOrder>("entity/customerorder", {
-    filter: `externalCode=${externalCode};archived=true`,
-    limit: 1,
-  })
-
-  return result.rows[0] || null
-}
-
-async function deleteMoyskladEntity(entityPath: string) {
-  await moyskladRequest(entityPath, { method: "DELETE" }).catch(missingMoyskladEntityOrThrow)
+function documentUniquenessConflict(label: string) {
+  // Code 3006 proves a uniqueness conflict, not that a document is trashed.
+  // Documents do not support archived=true; restoring trash requires the UI.
+  return new Error(
+    `${label}: конфликт уникальности в МойСклад (код 3006). ` +
+    "Проверьте существующий документ с этим номером, включая корзину, и его связь с заказом сайта. " +
+    "После устранения конфликта повторите выгрузку."
+  )
 }
 
 async function createInvoiceOut(params: {
@@ -801,8 +789,9 @@ async function createInvoiceOut(params: {
       }
     } catch (error) {
       if (isMoyskladTrashOperationError(error)) {
-        await deleteMoyskladEntity(`entity/invoiceout/${invoiceId}`)
-        invoiceId = null
+        throw new MoyskladTrashedOrderError(
+          `Счёт к заказу ${params.order.orderId || params.order.id} находится в корзине МойСклад. Восстановите его в МойСклад и повторите выгрузку.`
+        )
       } else if (hasMoyskladErrorCode(error, 1021)) {
         invoiceId = null
       } else {
@@ -825,24 +814,24 @@ async function createInvoiceOut(params: {
   } catch (error) {
     if (!hasMoyskladErrorCode(error, 3006)) throw error
 
-    const conflicting = await findArchivedInvoiceOutByExternalCode(externalCode)
+    // A concurrent export may have created this same invoice after our lookup.
+    const conflicting = await findInvoiceOutByExternalCode(externalCode)
     const conflictingId = extractMoyskladId(conflicting)
     if (conflictingId) {
-      await deleteMoyskladEntity(`entity/invoiceout/${conflictingId}`)
-
-      const created = await moyskladRequest<MoyskladInvoiceOut>("entity/invoiceout", {
-        method: "POST",
+      const updated = await moyskladRequest<MoyskladInvoiceOut>(`entity/invoiceout/${conflictingId}`, {
+        method: "PUT",
         body: JSON.stringify(invoiceBody),
       })
 
       return {
-        invoice: created,
-        invoiceId: extractMoyskladId(created),
+        invoice: updated,
+        invoiceId: conflictingId,
         payload: invoiceBody,
+        reused: true as const,
       }
     }
 
-    return null
+    throw documentUniquenessConflict(`Счёт к заказу ${params.order.orderId || params.order.id}`)
   }
 }
 
@@ -1122,22 +1111,23 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
       } catch (error) {
         if (!hasMoyskladErrorCode(error, 3006)) throw error
 
-        const conflicting = await findArchivedCustomerOrderByExternalCode(String(orderId))
+        // Reconcile only by this order's external code. A matching name alone
+        // does not authorize overwriting another document or deleting it.
+        const conflicting = await findCustomerOrderByExternalCode(String(orderId))
         const conflictingId = extractMoyskladId(conflicting)
         if (conflictingId) {
-          await deleteMoyskladEntity(`entity/customerorder/${conflictingId}`)
-
-          orderResponse = await moyskladRequest<MoyskladCustomerOrder>("entity/customerorder", {
-            method: "POST",
+          delete body.state
+          orderResponse = await moyskladRequest<MoyskladCustomerOrder>(`entity/customerorder/${conflictingId}`, {
+            method: "PUT",
             body: JSON.stringify(body),
           })
+          moyskladOrderId = conflictingId
+          orderMessage = "Заказ найден по внешнему коду после конфликта создания, позиции и суммы обновлены"
         } else {
-          throw new MoyskladTrashedOrderError(
-            `Заказ ${params.order.orderId || String(orderId)} не может быть создан: конфликт имени с документом в корзине МойСклад`
-          )
+          throw documentUniquenessConflict(`Заказ ${params.order.orderId || String(orderId)}`)
         }
       }
-      moyskladOrderId = extractMoyskladId(orderResponse)
+      moyskladOrderId = moyskladOrderId || extractMoyskladId(orderResponse)
     }
 
     moyskladOrderIdForUpdate = moyskladOrderId
@@ -1226,12 +1216,8 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
     return { success: true as const, moyskladOrderId, moyskladInvoiceOutId }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Ошибка синхронизации с МойСклад"
-    // A trashed-document name conflict is not a sync failure the code can
-    // retry its way out of — it needs a human to resolve it in MoySklad's
-    // recycle bin (restore or permanently delete the conflicting document).
-    // We still record it as an error so it stays visible on the order, but
-    // flag it so callers (the bulk retry action) can report it as a
-    // "skipped" conflict instead of a generic failure.
+    // Only an explicit trash response is marked as skipped. A uniqueness
+    // conflict remains an unresolved error until the documents are reconciled.
     const isTrashedConflict = error instanceof MoyskladTrashedOrderError
 
     const errorData: Record<string, unknown> = {

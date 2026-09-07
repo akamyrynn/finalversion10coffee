@@ -215,3 +215,74 @@ test('unit lookup failure is not cached as piece accounting', async () => {
   assert.equal(f.calls.filter(c => c.path.includes('expand=uom')).length, 4)
   assert.equal(writes(f, 'customerorder').length, 0)
 })
+
+const uniquenessConflict = () => Response.json({
+  errors: [{ code: 3006, error: "Нарушено ограничение уникальности параметра 'name'" }],
+}, { status: 412 })
+
+for (const entity of ['customerorder', 'invoiceout']) {
+  test(`${entity} uniqueness conflict uses supported filters, remains unresolved, and never deletes documents`, async () => {
+    const f = fixture({ config: { createInvoiceOnOrder: entity === 'invoiceout' }, respond: c => {
+      if (decodeURIComponent(c.path).includes('archived')) {
+        return Response.json({ errors: [{ code: 1034, error: "Неизвестное поле фильтрации 'archived'" }] }, { status: 412 })
+      }
+      if (c.path === `entity/${entity}` && c.method === 'POST') return uniquenessConflict()
+    } })
+    const result = await f.sync.syncOrderToMoysklad(f.params)
+    assert.match(result.error, /конфликт уникальности.*3006/)
+    assert.doesNotMatch(result.error, /находится в корзине|1034|archived/)
+    assert.equal(result.trashed, false)
+    assert.equal(writes(f, entity).length, 1)
+    assert.equal(f.calls.some(c => c.method === 'DELETE' || decodeURIComponent(c.path).includes('archived')), false)
+    assert.equal(f.updates.at(-1).data.moyskladSyncStatus, 'error')
+    if (entity === 'invoiceout') assert.equal(f.updates.at(-1).data.moyskladCustomerOrderId, 'remote-id')
+  })
+
+  test(`${entity} created by a concurrent export is reused by external code without resetting order state`, async () => {
+    let lookups = 0
+    const externalCode = entity === 'customerorder' ? '382' : '10C-00382-invoice'
+    const f = fixture({ config: { createInvoiceOnOrder: entity === 'invoiceout', defaultOrderStateId: 'new-state' }, respond: c => {
+      if (c.method === 'GET' && c.path.startsWith(`entity/${entity}?`)) {
+        const query = new URLSearchParams(c.path.split('?')[1])
+        assert.equal(query.get('filter'), `externalCode=${externalCode}`)
+        return Response.json({ rows: ++lookups === 1 ? [] : [{ id: 'concurrent-id', externalCode }] })
+      }
+      if (c.path === `entity/${entity}` && c.method === 'POST') return uniquenessConflict()
+      if (c.path === `entity/${entity}/concurrent-id` && c.method === 'PUT') return Response.json({ id: 'concurrent-id' })
+    } })
+    const result = await f.sync.syncOrderToMoysklad(f.params)
+    assert.equal(result.success, true)
+    assert.equal(entity === 'customerorder' ? result.moyskladOrderId : result.moyskladInvoiceOutId, 'concurrent-id')
+    assert.equal(writes(f, entity).length, 1)
+    assert.equal(f.calls.some(c => c.method === 'DELETE'), false)
+    const update = f.calls.find(c => c.path === `entity/${entity}/concurrent-id` && c.method === 'PUT')
+    assert.ok(update)
+    assert.equal(JSON.parse(update.init.body).state, undefined)
+  })
+
+  test(`${entity} explicitly in trash is not deleted or recreated`, async () => {
+    const f = fixture({ config: { createInvoiceOnOrder: entity === 'invoiceout' }, respond: c => {
+      if (c.method === 'PUT' && c.path === `entity/${entity}/trashed-id`) {
+        return Response.json({ errors: [{ code: 3007, error: 'Документ находится в корзине' }] }, { status: 412 })
+      }
+    } })
+    f.params.order[entity === 'customerorder' ? 'moyskladCustomerOrderId' : 'moyskladInvoiceOutId'] = 'trashed-id'
+    const result = await f.sync.syncOrderToMoysklad(f.params)
+    assert.equal(result.trashed, true)
+    assert.match(result.error, /находится в корзине/)
+    assert.equal(writes(f, entity).length, 0)
+    assert.equal(f.calls.some(c => c.method === 'DELETE'), false)
+  })
+}
+
+test('503 during conflict reconciliation stays an API failure and does not trigger another create', async () => {
+  let lookups = 0
+  const f = fixture({ respond: c => {
+    if (c.method === 'GET' && c.path.startsWith('entity/customerorder?') && ++lookups > 1) return unavailable()
+    if (c.path === 'entity/customerorder' && c.method === 'POST') return uniquenessConflict()
+  } })
+  const result = await f.sync.syncOrderToMoysklad(f.params)
+  assert.match(result.error, /HTTP 503; GET entity\/customerorder/)
+  assert.equal(result.trashed, false)
+  assert.equal(writes(f, 'customerorder').length, 1)
+})
