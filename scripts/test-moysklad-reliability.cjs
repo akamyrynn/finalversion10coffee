@@ -37,7 +37,6 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
   const mocks = {
     'lib/moysklad/config': { getMoyskladConfig: () => config, assertMoyskladReady() {} },
     'lib/moysklad/logs': { writeMoyskladLog: async () => {} },
-    'lib/moysklad/order-hash': { computeOrderContentHash: () => 'hash' },
     'lib/utils/constants': { DELIVERY_METHOD_LABELS: {} },
     'lib/db': { dbQuery: async () => { throw new Error('Unexpected SQL mutation') } },
     'node:timers/promises': { setTimeout: async (ms, value, options) => {
@@ -60,7 +59,8 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
       const target = id.startsWith('@/') ? id.slice(2) : id.startsWith('.')
         ? path.posix.normalize(path.posix.join(path.posix.dirname(file), id)) : id
       if (Object.hasOwn(mocks, target)) return mocks[target]
-      if (['lib/moysklad/client', 'lib/moysklad/sync', 'lib/moysklad/bundles'].includes(target)) return load(target)
+      if (target === 'crypto') return require('node:crypto')
+      if (['lib/moysklad/client', 'lib/moysklad/sync', 'lib/moysklad/bundles', 'lib/moysklad/order-totals', 'lib/moysklad/order-link-repair', 'lib/moysklad/order-hash'].includes(target)) return load(target)
       throw new Error(`Unexpected dependency: ${id}`)
     }
     vm.runInNewContext(`(function(require,module,exports){${compiled.get(file)}\n})`, {
@@ -82,6 +82,145 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
 
 const unavailable = () => new Response('<html>unavailable</html>', { status: 503 })
 const writes = (f, entity) => f.calls.filter(c => c.path === `entity/${entity}` && c.method === 'POST')
+
+function repairFixture() {
+  const order = { order_id: 'TEST-179', total: 19192, subtotal: 23990, discount_amount: 4798,
+    delivery_cost: 0, moysklad_counterparty_id: 'buyer', payment_status: 'pending', status: 'new' }
+  const items = [{ product_name: 'Coffee', variant_name: '1 кг, В зёрнах', quantity: 10, unit_price: 2399 }]
+  const doc = { id: 'remote-order', name: 'TEST-179', updated: '2026-09-01', sum: 1919200,
+    agent: { meta: { href: '/counterparty/buyer' } }, organization: { meta: { href: '/organization/org' } },
+    positions: { meta: { size: 1 }, rows: [{ quantity: 10, price: 239900, discount: 20, assortment: { name: 'Coffee (1 кг, В зернах)' } }] } }
+  const invoice = structuredClone(doc)
+  invoice.id = 'invoice'
+  invoice.name = 'invoice-22'
+  invoice.customerOrder = { meta: { href: '/customerorder/remote-order' } }
+  const expected = { orderNumber: 'TEST-179', total: 19192, counterpartyId: 'buyer', organizationId: 'org' }
+  return { order, items, doc, invoice, expected }
+}
+
+test('link repair validates both existing documents without changing business data and uses the normal order hash', () => {
+  const f = fixture(), repair = f.load('lib/moysklad/order-link-repair')
+  const data = repairFixture(), before = JSON.stringify(data)
+  const hash = repair.validateOrderLinkRepair(data.order, data.items, data.doc, data.invoice, data.expected)
+  assert.equal(hash, f.load('lib/moysklad/order-hash').computeOrderContentHash({ subtotal: 23990, discountAmount: 4798,
+    deliveryCost: 0, total: 19192, items: [{ productName: 'Coffee', variantName: '1 кг, В зёрнах', quantity: 10, unitPrice: 2399 }] }))
+  assert.equal(JSON.stringify(data), before)
+  const repaired = { ...data.order, moysklad_customer_order_id: 'remote-order', moysklad_invoice_out_id: 'invoice', moysklad_sync_status: 'synced' }
+  assert.deepEqual(repair.orderWithoutRepairMetadata(data.order), repair.orderWithoutRepairMetadata(repaired))
+  assert.notDeepEqual(repair.orderWithoutRepairMetadata(data.order), repair.orderWithoutRepairMetadata({ ...repaired, payment_status: 'paid' }))
+})
+
+for (const [name, change] of [
+  ['other buyer', x => { x.doc.agent.meta.href = '/counterparty/other' }],
+  ['other organization', x => { x.invoice.organization.meta.href = '/organization/other' }],
+  ['wrong invoice link', x => { x.invoice.customerOrder.meta.href = '/customerorder/other' }],
+  ['other existing link', x => { x.order.moysklad_customer_order_id = 'other' }],
+  ['changed amount', x => { x.order.total++ }],
+  ['other product', x => { x.invoice.positions.rows[0].assortment.name = 'Other coffee' }],
+  ['other quantity', x => { x.doc.positions.rows[0].quantity = 11 }],
+  ['other price', x => { x.invoice.positions.rows[0].price++ }],
+  ['unexpanded positions', x => { x.doc.positions.meta.size = 2 }],
+  ['delivery', x => { x.order.delivery_cost = 100 }],
+]) {
+  test(`link repair refuses ${name}`, () => {
+    const x = repairFixture(); change(x)
+    assert.throws(() => fixture().load('lib/moysklad/order-link-repair').validateOrderLinkRepair(x.order, x.items, x.doc, x.invoice, x.expected))
+  })
+}
+
+const moneyFixtures = [
+  { name: 'mixed per-line rounding', total: 16214, rows: [[2, 615, 15, 185], [2, 605, 15, 182], [6, 2430, 15, 2187], [1, 1840, 5, 92]] },
+  { name: 'discount rounded down', total: 20152, rows: [[12, 2399, 30, 8636]] },
+  { name: 'discount rounded up', total: 8756, rows: [[5, 2399, 27, 3239]] },
+  { name: 'exact percent unchanged', total: 9720, rows: [[5, 2430, 20, 2430]] },
+  { name: 'delivery excluded from discount', total: 135, delivery: 35, rows: [[3, 50, 33.33, 50]] },
+]
+
+for (const data of moneyFixtures) {
+  test(`order and invoice keep the site's exact total: ${data.name}`, async () => {
+    const f = fixture({ config: { createInvoiceOnOrder: true, deliveryServiceId: 'delivery' }, respond: c => {
+      if (c.method === 'POST' && /^entity\/(customerorder|invoiceout)$/.test(c.path)) {
+        const body = JSON.parse(c.init.body)
+        return Response.json({ id: c.path.split('/')[1], sum: body.positions.reduce((s, p) => s + Math.round(p.quantity * p.price * (1 - (p.discount || 0) / 100)), 0) })
+      }
+    } })
+    Object.assign(f.params.order, { total: data.total, deliveryCost: data.delivery || 0, subtotal: data.rows.reduce((sum, row) => sum + row[0] * row[1], 0) })
+    f.params.cartItems = data.rows.map(([quantity, price], i) => ({ ...f.params.cartItems[0], id: `item-${i}`, quantity, variant: { name: `Pack ${i}`, price } }))
+    f.params.discountLines = data.rows.map((r, i) => ({ cartItemId: `item-${i}`, discountPercent: r[2], discountAmount: r[3] }))
+    const result = await f.sync.syncOrderToMoysklad(f.params)
+    assert.equal(result.success, true, result.error)
+    const order = JSON.parse(writes(f, 'customerorder')[0].init.body)
+    const invoice = JSON.parse(writes(f, 'invoiceout')[0].init.body)
+    assert.deepEqual(order.positions, invoice.positions)
+    assert.equal(order.positions.reduce((s, p) => s + Math.round(p.quantity * p.price * (1 - (p.discount || 0) / 100)), 0), data.total * 100)
+    assert.equal(order.positions.reduce((s, p) => s + p.quantity, 0), data.rows.reduce((s, r) => s + r[0], 0) + (data.delivery ? 1 : 0))
+    assert.ok(order.positions.every(p => Number.isInteger(p.price) && p.price >= 0 && p.quantity > 0))
+    assert.equal(order.name, '10C-00382')
+    if (data.name === 'exact percent unchanged') assert.equal(order.positions[0].discount, 20)
+    if (data.delivery) assert.equal(order.positions.at(-1).price, data.delivery * 100)
+    assert.equal(f.updates.at(-1).data.total, undefined)
+  })
+}
+
+test('legacy discounts and global rounding are reconciled without changing assortment, VAT or quantity', () => {
+  const { reconcileMoyskladOrderTotals, moyskladPositionsSum } = fixture().load('lib/moysklad/order-totals')
+  const position = { price: 10100, quantity: 3, discount: 10, vat: 22, assortment: { meta: { href: 'product' } } }
+  const result = reconcileMoyskladOrderTotals([position], ['item'], [{ cartItemId: 'item', discountPercent: 10 }], 273)
+  assert.equal(moyskladPositionsSum(result), 27300)
+  assert.equal(result.reduce((s, p) => s + p.quantity, 0), 3)
+  assert.ok(result.every(p => p.vat === 22 && p.assortment.meta.href === 'product'))
+  assert.equal(position.price, 10100)
+  const small = { ...position, quantity: 1, price: 100 }
+  assert.equal(moyskladPositionsSum(reconcileMoyskladOrderTotals([small, small], ['a', 'b'], [
+    { cartItemId: 'a', discountPercent: 10 }, { cartItemId: 'b', discountPercent: 10 },
+  ], 1)), 100)
+})
+
+test('large mismatch or invalid money prevents document writes', async () => {
+  for (const total of [1, -1, NaN]) {
+    const f = fixture()
+    f.params.order.total = total
+    const result = await f.sync.syncOrderToMoysklad(f.params)
+    assert.ok(result.error)
+    assert.equal(writes(f, 'customerorder').length, 0)
+  }
+})
+
+test('even a small changed item price is not hidden as discount rounding', async () => {
+  const f = fixture()
+  Object.assign(f.params.order, { subtotal: 500.1, total: 400 })
+  f.params.discountLines = [{ cartItemId: 'line', discountPercent: 20, discountAmount: 100 }]
+  assert.match((await f.sync.syncOrderToMoysklad(f.params)).error, /подытогу/)
+  assert.equal(writes(f, 'customerorder').length, 0)
+})
+
+test('zero and full discounts keep exact zero and full totals', () => {
+  const { reconcileMoyskladOrderTotals, moyskladPositionsSum } = fixture().load('lib/moysklad/order-totals')
+  for (const discount of [0, 100]) {
+    const p = { price: 12345, quantity: 7, discount, assortment: { meta: { href: 'p' } } }
+    const total = discount ? 0 : 864.15
+    const result = reconcileMoyskladOrderTotals([p], ['line'], [{ cartItemId: 'line', discountPercent: discount }], total, 864.15)
+    assert.equal(moyskladPositionsSum(result), Math.round(total * 100))
+    assert.equal(result[0].quantity, 7)
+  }
+})
+
+for (const entity of ['customerorder', 'invoiceout']) {
+  test(`wrong returned ${entity} sum keeps its ID and never reports synced`, async () => {
+    const f = fixture({ config: { createInvoiceOnOrder: true }, respond: c => {
+      if (c.method === 'POST' && /^entity\/(customerorder|invoiceout)$/.test(c.path)) {
+        return Response.json({ id: c.path.split('/')[1], sum: c.path === `entity/${entity}` ? 49999 : 50000 })
+      }
+    } })
+    f.params.order.total = 500
+    assert.match((await f.sync.syncOrderToMoysklad(f.params)).error, /отличающуюся/)
+    const update = f.updates.at(-1).data
+    assert.equal(update.moyskladSyncStatus, 'error')
+    assert.equal(update.moyskladCustomerOrderId, 'customerorder')
+    if (entity === 'invoiceout') assert.equal(update.moyskladInvoiceOutId, 'invoiceout')
+    else assert.equal(writes(f, 'invoiceout').length, 0)
+  })
+}
 
 test('read recovers after HTTP 503 and waits before retrying', async () => {
   const f = fixture({ respond: (call, n) => n === 1 ? unavailable() : Response.json({ rows: [{ id: 'existing' }] }) })

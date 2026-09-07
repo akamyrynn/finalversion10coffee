@@ -5,6 +5,7 @@ import type { MoyskladConfig, MoyskladSalesChannel as SalesChannel } from "./con
 import { hasMoyskladErrorCode, MoyskladApiError, extractMoyskladId, moyskladGetList, moyskladMeta, moyskladRequest } from "./client"
 import { writeMoyskladLog } from "./logs"
 import { computeOrderContentHash } from "./order-hash"
+import { assertMoyskladDocumentTotal, reconcileMoyskladOrderTotals, type MoyskladDiscountLine } from "./order-totals"
 import { DELIVERY_METHOD_LABELS } from "@/lib/utils/constants"
 import { ensureMoyskladBundleForVariant } from "./bundles"
 import type {
@@ -63,11 +64,6 @@ interface SyncOrderParams {
   cartItems: CartItem[]
   discountLines?: MoyskladDiscountLine[]
   force?: boolean
-}
-
-interface MoyskladDiscountLine {
-  cartItemId: string
-  discountPercent: number
 }
 
 interface MoyskladProductUomResponse {
@@ -1020,7 +1016,7 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
     }
     if (!config.vatEnabled) positionVat = 0
 
-    const { positions, skipped, compositionLines } = await buildCustomerPositions(
+    const { positions: originalPositions, skipped, compositionLines } = await buildCustomerPositions(
       params.cartItems,
       Number(params.order.deliveryCost) || 0,
       params.discountLines || [],
@@ -1036,9 +1032,13 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
       throw new Error(`Позиции не готовы к выгрузке в МойСклад: ${names.join(", ")}`)
     }
 
-    if (positions.length === 0) {
+    if (originalPositions.length === 0) {
       throw new Error("Нет позиций для отправки в МойСклад")
     }
+
+    const positions = reconcileMoyskladOrderTotals(
+      originalPositions, params.cartItems.map(item => item.id), params.discountLines || [], params.order.total, params.order.subtotal,
+    )
 
     const description = buildOrderDescriptionWithComposition(
       params.order,
@@ -1131,6 +1131,7 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
     }
 
     moyskladOrderIdForUpdate = moyskladOrderId
+    assertMoyskladDocumentTotal(orderResponse, params.order.total)
 
     await writeMoyskladLog({
       entityType: "order",
@@ -1165,6 +1166,7 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
         moyskladInvoiceOutIdForUpdate = moyskladInvoiceOutId
         invoiceResponse = invoiceResult.invoice
         invoicePayload = invoiceResult.payload
+        assertMoyskladDocumentTotal(invoiceResponse, params.order.total)
       }
     }
 

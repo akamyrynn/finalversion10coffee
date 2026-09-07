@@ -4,6 +4,7 @@ import { normalizeProductDetailsSchema } from "@/lib/product-types"
 import { calculateClientDiscount, normalizeCategoryDiscounts, normalizeDiscountPercent, normalizeProductDiscounts, type CategoryDiscountRule, type ProductDiscountRule } from "@/lib/discounts"
 import { syncOrderToMoysklad, MoyskladTrashedOrderError } from "./sync"
 import { computeOrderContentHash } from "./order-hash"
+import type { MoyskladDiscountLine } from "./order-totals"
 import { writeMoyskladLog } from "./logs"
 import { getMoyskladConfig } from "./config"
 import { moyskladGetList, moyskladMeta } from "./client"
@@ -36,6 +37,8 @@ interface RetryOptions {
   // list). When present, these orders are always treated as retryable/due,
   // bypassing the status/age filters used by the background sweep.
   orderIds?: (string | number)[]
+  // Explicit maintenance only, never enabled by background/full-list retries.
+  forceSelected?: boolean
 }
 
 interface PayloadClientDoc {
@@ -647,7 +650,7 @@ async function getRetryCartItems(payload: Payload, order: PayloadOrderDoc): Prom
   return result
 }
 
-function buildDiscountLines(order: PayloadOrderDoc, cartItems: CartItem[], client: PayloadClientDoc) {
+function buildDiscountLines(order: PayloadOrderDoc, cartItems: CartItem[], client: PayloadClientDoc): MoyskladDiscountLine[] {
   const subtotal = numberValue(order.subtotal)
   const discountAmount = numberValue(order.discountAmount)
   if (subtotal <= 0 || discountAmount <= 0) return []
@@ -657,9 +660,9 @@ function buildDiscountLines(order: PayloadOrderDoc, cartItems: CartItem[], clien
       const cartItem = cartItems[index]
       const discountPercent = normalizeRetryDiscountPercent(item.discountPercent)
       if (!cartItem || discountPercent <= 0) return null
-      return { cartItemId: cartItem.id, discountPercent }
+      return { cartItemId: cartItem.id, discountPercent, discountAmount: numberValue(item.discountAmount) || undefined }
     })
-    .filter((line): line is { cartItemId: string; discountPercent: number } => line !== null)
+    .filter((line) => line !== null)
   if (storedLines.length > 0) return storedLines
 
 
@@ -670,11 +673,12 @@ function buildDiscountLines(order: PayloadOrderDoc, cartItems: CartItem[], clien
   })
   if (
     recalculatedClientDiscount.lines.length > 0 &&
-    (recalculatedClientDiscount.amount === discountAmount || (!order.promoCode && recalculatedClientDiscount.hasCategoryDiscount))
+    recalculatedClientDiscount.amount === discountAmount
   ) {
     return recalculatedClientDiscount.lines.map((line) => ({
       cartItemId: line.cartItemId,
       discountPercent: normalizeRetryDiscountPercent(line.discountPercent),
+      discountAmount: line.discountAmount,
     }))
   }
 
@@ -913,6 +917,9 @@ export async function retryFailedMoyskladOrders(payload: Payload, options: Retry
   const orderIds = options.orderIds && options.orderIds.length > 0
     ? Array.from(new Set(options.orderIds.map(Number).filter((id) => Number.isInteger(id) && id > 0)))
     : null
+  if (options.forceSelected && (!orderIds || orderIds.length === 0)) {
+    throw new Error("Принудительная выгрузка требует явного списка заказов")
+  }
   const limit = options.limit || (options.includeAllUnexported ? 100 : 25)
   const minAgeMs = options.minAgeMs ?? RETRY_INTERVAL_MS
   const includeAllUnexported = options.includeAllUnexported || false
@@ -981,7 +988,7 @@ export async function retryFailedMoyskladOrders(payload: Payload, options: Retry
   const toSync: PayloadOrderDoc[] = []
   let skipped = 0
   for (const order of candidates) {
-    if (compareWithMoysklad && isOrderUpToDateInMoysklad(order, moyskladExternalCodes)) {
+    if (!options.forceSelected && compareWithMoysklad && isOrderUpToDateInMoysklad(order, moyskladExternalCodes)) {
       skipped += 1
       continue
     }
