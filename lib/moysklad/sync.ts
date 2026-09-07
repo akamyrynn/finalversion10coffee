@@ -249,6 +249,11 @@ async function findCounterpartyById(id: string) {
   return moyskladRequest<MoyskladCounterparty>(`entity/counterparty/${id}`)
 }
 
+function missingMoyskladEntityOrThrow(error: unknown): null {
+  if (error instanceof MoyskladApiError && (error.status === 404 || hasMoyskladErrorCode(error, 1021))) return null
+  throw error
+}
+
 async function updateCounterpartyContactData(id: string, client: SyncClient, company?: SyncCompany | null) {
   return moyskladRequest<MoyskladCounterparty>(`entity/counterparty/${id}`, {
     method: "PUT",
@@ -261,7 +266,7 @@ async function ensureCounterparty(payload: Payload, client: SyncClient, company:
 
   if (company) {
     if (company.moyskladCounterpartyId) {
-      const linkedCounterparty = await findCounterpartyById(company.moyskladCounterpartyId).catch(() => null)
+      const linkedCounterparty = await findCounterpartyById(company.moyskladCounterpartyId).catch(missingMoyskladEntityOrThrow)
       const linkedInn = normalizeInn(linkedCounterparty?.inn)
       const companyInn = normalizeInn(company.inn)
 
@@ -463,7 +468,11 @@ async function isKilogramProduct(moyskladProductId: string) {
       const uomName = normalizeUomName(product.uom?.name)
       return uomName === "кг" || uomName.includes("килограмм")
     })
-    .catch(() => false)
+    .catch((error) => {
+      // An unavailable API says nothing about the unit of measurement.
+      kilogramProductCache.delete(moyskladProductId)
+      throw error
+    })
 
   kilogramProductCache.set(moyskladProductId, promise)
   return promise
@@ -479,12 +488,12 @@ function shouldUseBundleAccounting(item: CartItem, productMoyskladId: string) {
 
 async function getMoyskladVariantForBundle(variantMoyskladId: string) {
   return moyskladRequest<MoyskladVariantForBundle>(`entity/variant/${variantMoyskladId}`)
-    .catch(() => null)
+    .catch(missingMoyskladEntityOrThrow)
 }
 
 async function getMoyskladProductForBundle(productMoyskladId: string) {
   return moyskladRequest<MoyskladProductUomResponse>(`entity/product/${productMoyskladId}`)
-    .catch(() => null)
+    .catch(missingMoyskladEntityOrThrow)
 }
 
 async function ensureBundleForWeightAccountingItem(
@@ -525,7 +534,11 @@ async function ensureBundleForWeightAccountingItem(
       weightGrams,
       priceRub: item.variant?.price ?? 0,
     })
-  })()
+  })().catch((error) => {
+    // A failed attempt must not poison subsequent manual/background retries.
+    bundleCache.delete(cacheKey)
+    throw error
+  })
 
   bundleCache.set(cacheKey, promise)
   return promise
@@ -738,11 +751,7 @@ async function findArchivedCustomerOrderByExternalCode(externalCode: string) {
 }
 
 async function deleteMoyskladEntity(entityPath: string) {
-  try {
-    await moyskladRequest(entityPath, { method: "DELETE" })
-  } catch {
-    // Best-effort: if deletion fails we still move on to create a fresh document.
-  }
+  await moyskladRequest(entityPath, { method: "DELETE" }).catch(missingMoyskladEntityOrThrow)
 }
 
 async function createInvoiceOut(params: {
@@ -773,7 +782,7 @@ async function createInvoiceOut(params: {
 
   let invoiceId = params.order.moyskladInvoiceOutId || null
   if (!invoiceId) {
-    const existing = await findInvoiceOutByExternalCode(externalCode).catch(() => null)
+    const existing = await findInvoiceOutByExternalCode(externalCode)
     invoiceId = extractMoyskladId(existing)
   }
 
@@ -816,7 +825,7 @@ async function createInvoiceOut(params: {
   } catch (error) {
     if (!hasMoyskladErrorCode(error, 3006)) throw error
 
-    const conflicting = await findArchivedInvoiceOutByExternalCode(externalCode).catch(() => null)
+    const conflicting = await findArchivedInvoiceOutByExternalCode(externalCode)
     const conflictingId = extractMoyskladId(conflicting)
     if (conflictingId) {
       await deleteMoyskladEntity(`entity/invoiceout/${conflictingId}`)
@@ -915,7 +924,7 @@ export async function ensureMoyskladStockLossForOrder(
   }
 
   const externalCode = buildStockLossExternalCode(order)
-  const existing = await findStockLossByExternalCode(externalCode).catch(() => null)
+  const existing = await findStockLossByExternalCode(externalCode)
   const existingId = extractMoyskladId(existing)
 
   if (existingId) {
@@ -1069,7 +1078,8 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
     let moyskladOrderId = params.order.moyskladCustomerOrderId || null
 
     if (!moyskladOrderId) {
-      const existing = await findCustomerOrderByExternalCode(String(orderId)).catch(() => null)
+      // A failed lookup is not evidence that the document does not exist.
+      const existing = await findCustomerOrderByExternalCode(String(orderId))
       moyskladOrderId = extractMoyskladId(existing)
     }
 
@@ -1112,7 +1122,7 @@ export async function syncOrderToMoysklad(params: SyncOrderParams) {
       } catch (error) {
         if (!hasMoyskladErrorCode(error, 3006)) throw error
 
-        const conflicting = await findArchivedCustomerOrderByExternalCode(String(orderId)).catch(() => null)
+        const conflicting = await findArchivedCustomerOrderByExternalCode(String(orderId))
         const conflictingId = extractMoyskladId(conflicting)
         if (conflictingId) {
           await deleteMoyskladEntity(`entity/customerorder/${conflictingId}`)

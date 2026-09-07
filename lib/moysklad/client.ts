@@ -1,5 +1,11 @@
 import { getMoyskladConfig, assertMoyskladReady, type MoyskladConfig } from "./config"
 import type { MoyskladEntityType, MoyskladListResponse, MoyskladMeta } from "./types"
+import { setTimeout as delay } from "node:timers/promises"
+
+const MAX_ATTEMPTS = 3
+const REQUEST_TIMEOUT_MS = 30_000
+const MAX_RETRY_DELAY_MS = 10_000
+const TRANSIENT_STATUSES = new Set([500, 502, 503, 504])
 
 export class MoyskladApiError extends Error {
   constructor(
@@ -45,6 +51,22 @@ async function parseResponse(response: Response) {
   }
 }
 
+function retryDelay(response: Response, attempt: number) {
+  const delays = [2 ** attempt * 1000]
+  const retryAfter = response.headers.get("Retry-After")
+  if (retryAfter) {
+    const seconds = Number(retryAfter)
+    const milliseconds = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(retryAfter) - Date.now()
+    if (Number.isFinite(milliseconds)) delays.push(milliseconds)
+  }
+  const lognexRetryAfter = response.headers.get("X-Lognex-Retry-After")
+  if (lognexRetryAfter) {
+    const milliseconds = Number(lognexRetryAfter)
+    if (Number.isFinite(milliseconds)) delays.push(milliseconds)
+  }
+  return Math.max(...delays)
+}
+
 export async function moyskladRequest<T>(
   path: string,
   init: RequestInit = {},
@@ -52,36 +74,67 @@ export async function moyskladRequest<T>(
 ): Promise<T> {
   assertMoyskladReady(config)
 
-  const MAX_RETRIES = 3
+  const method = (init.method || "GET").toUpperCase()
+  const canRetryRead = method === "GET" || method === "HEAD"
+  // Query filters may contain customers' personal data; keep them out of errors.
+  const requestLabel = `${method} ${path.split("?")[0]}`
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const response = await fetch(joinUrl(config.baseUrl, path), {
-      ...init,
-      headers: {
-        Accept: "application/json;charset=utf-8",
-        "Content-Type": "application/json",
-        Authorization: buildAuthHeader(config),
-        ...(init.headers || {}),
-      },
-      cache: "no-store",
-    })
-
-    const body = await parseResponse(response)
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    init.signal?.throwIfAborted()
+    const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout
+    let response: Response
+    let body: unknown
+    try {
+      response = await fetch(joinUrl(config.baseUrl, path), {
+        ...init,
+        signal,
+        headers: {
+          Accept: "application/json;charset=utf-8",
+          "Content-Type": "application/json",
+          Authorization: buildAuthHeader(config),
+          ...(init.headers || {}),
+        },
+        cache: "no-store",
+      })
+      body = await parseResponse(response)
+    } catch (error) {
+      init.signal?.throwIfAborted()
+      if (!timeout.aborted && !(error instanceof TypeError)) throw error
+      if (canRetryRead && attempt < MAX_ATTEMPTS) {
+        await delay(2 ** attempt * 1000, undefined, { signal: init.signal || undefined })
+        continue
+      }
+      throw new MoyskladApiError(
+        `${timeout.aborted ? "МойСклад не ответил за 30 секунд" : "Не удалось получить ответ от МойСклад"} (${requestLabel}). Повторите выгрузку позже.`,
+        0,
+        null,
+      )
+    }
 
     if (!response.ok) {
       const moyskladErrors = parseMoyskladErrors(body)
-      const isRateLimit = moyskladErrors.some((e) => e.code === 1049)
+      const isRateLimit = response.status === 429 || moyskladErrors.some((e) => e.code === 1049)
       const message = moyskladErrors.length > 0
         ? JSON.stringify(moyskladErrors)
-        : `MoySklad API error ${response.status}`
+        : TRANSIENT_STATUSES.has(response.status)
+          ? "МойСклад временно недоступен. Повторите выгрузку позже."
+          : isRateLimit
+            ? "МойСклад ограничил частоту запросов. Повторите выгрузку позже."
+            : "Ошибка API МойСклад"
 
-      if (isRateLimit && attempt < MAX_RETRIES) {
-        const delay = Math.pow(2, attempt) * 1000
-        await new Promise((resolve) => setTimeout(resolve, delay))
-        continue
+      // A 5xx/timeout after a write does not prove the write failed. Replaying
+      // it could duplicate an order, invoice, or stock loss. Only retry reads
+      // or requests explicitly rejected by the API's rate limiter.
+      if ((isRateLimit || (canRetryRead && TRANSIENT_STATUSES.has(response.status))) && attempt < MAX_ATTEMPTS) {
+        const waitMs = retryDelay(response, attempt)
+        if (waitMs <= MAX_RETRY_DELAY_MS) {
+          await delay(waitMs, undefined, { signal: init.signal || undefined })
+          continue
+        }
       }
 
-      throw new MoyskladApiError(message, response.status, body)
+      throw new MoyskladApiError(`${message} (HTTP ${response.status}; ${requestLabel})`, response.status, body)
     }
 
     return body as T

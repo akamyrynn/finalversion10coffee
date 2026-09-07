@@ -71,7 +71,7 @@ async function findMoyskladBundleByExternalCode(externalCode: string) {
   const result = await moyskladGetList<MoyskladBundle>("entity/bundle", {
     filter: `externalCode=${externalCode}`,
     limit: 1,
-  }).catch(() => null)
+  })
 
   return result?.rows?.[0] || null
 }
