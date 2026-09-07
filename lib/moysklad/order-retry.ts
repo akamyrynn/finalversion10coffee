@@ -324,6 +324,16 @@ function isUnexportedMoyskladOrder(order: PayloadOrderDoc) {
   return !order.moyskladCustomerOrderId?.trim()
 }
 
+function getRetryExclusionReason(order: PayloadOrderDoc): string | null {
+  // Owner-approved exception, 2026-09-07: leave this historical order alone.
+  // Match both identifiers, never an API error code or an order's age. This
+  // also applies to selections/--force; link recovery remains a separate action.
+  if (String(order.id) === "160" && order.orderId === "10C-00179") {
+    return "старый заказ, повторная выгрузка отключена по решению владельца"
+  }
+  return null
+}
+
 function isRetryableMoyskladOrder(
   order: PayloadOrderDoc,
   includeAllUnexported = false,
@@ -966,11 +976,18 @@ export async function retryFailedMoyskladOrders(payload: Payload, options: Retry
   // Explicitly selected orders (checkbox bulk action in the admin list) are
   // always treated as retryable/due — the admin picked them on purpose, so we
   // skip the automatic status/age filtering used by the background sweep.
+  const excludedOrders: { id: string | number; orderId?: string; reason: string }[] = []
+  const eligibleOrders = orders.filter((order) => {
+    const reason = getRetryExclusionReason(order)
+    if (!reason) return true
+    excludedOrders.push({ id: order.id, orderId: order.orderId, reason })
+    return false
+  })
   const retryable = orderIds
-    ? orders
-    : orders.filter((order) => isRetryableMoyskladOrder(order, includeAllUnexported, includeExisting, includePaidDisabledRetail))
+    ? eligibleOrders
+    : eligibleOrders.filter((order) => isRetryableMoyskladOrder(order, includeAllUnexported, includeExisting, includePaidDisabledRetail))
   const candidates = orderIds
-    ? orders
+    ? eligibleOrders
     : retryable.filter((order) => isRetryDue(order, minAgeMs, includeAllUnexported, includeExisting, includePaidDisabledRetail))
 
   // Compare-first: for the manual "Повторить/обновить выгрузку" action (and
@@ -981,7 +998,7 @@ export async function retryFailedMoyskladOrders(payload: Payload, options: Retry
   // sync, so re-running the action when nothing changed finishes in seconds
   // instead of re-pushing every order.
   const compareWithMoysklad = Boolean(orderIds) || includeExisting || includeAllUnexported
-  const moyskladExternalCodes = compareWithMoysklad
+  const moyskladExternalCodes = compareWithMoysklad && candidates.length > 0
     ? await fetchMoyskladOrderExternalCodes().catch(() => null)
     : null
 
@@ -1010,6 +1027,10 @@ export async function retryFailedMoyskladOrders(payload: Payload, options: Retry
     total: toSync.length,
     current: 0,
   })
+
+  for (const order of excludedOrders) {
+    emit({ type: "status", orderId: order.orderId, message: `${order.orderId}: пропущен — ${order.reason}.` })
+  }
 
   for (let i = 0; i < toSync.length; i++) {
     const order = toSync[i]
@@ -1072,12 +1093,11 @@ export async function retryFailedMoyskladOrders(payload: Payload, options: Retry
   const succeeded = retried.filter((item) => item.success).length
   const skippedCount = retried.filter((item) => item.skipped).length
   const failed = retried.filter((item) => !item.success && !item.skipped).length
+  const skippedTotal = skipped + skippedCount + excludedOrders.length
 
   emit({
     type: "done",
-    message: failed === 0
-      ? `Готово: отправлено ${succeeded}, пропущено ${skippedCount}, ошибок ${failed}`
-      : `Готово: отправлено ${succeeded}, пропущено ${skippedCount}, ошибок ${failed}`,
+    message: `Готово: отправлено ${succeeded}, пропущено ${skippedTotal}, ошибок ${failed}`,
   })
 
   return {
@@ -1090,5 +1110,7 @@ export async function retryFailedMoyskladOrders(payload: Payload, options: Retry
     succeeded,
     failed,
     trashedSkipped: skippedCount,
+    excludedOrders,
+    skippedTotal,
   }
 }

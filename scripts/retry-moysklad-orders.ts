@@ -7,7 +7,7 @@ async function main() {
     ids: { type: "string" }, force: { type: "boolean", default: false }, help: { type: "boolean" },
   } })
   if (values.help) {
-    console.log("Use --ids 343,202,217 to select orders; --force also refreshes unchanged selected documents. Omitting --ids runs the normal full retry.")
+    console.log("Use --ids 343,202,217 to select orders; --force also refreshes unchanged selected documents. Omitting --ids runs the normal full retry. Owner-approved legacy exclusions remain skipped, including with --force.")
     return
   }
   const tokens = values.ids?.split(",")

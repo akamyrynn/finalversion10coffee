@@ -37,6 +37,7 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
   const mocks = {
     'lib/moysklad/config': { getMoyskladConfig: () => config, assertMoyskladReady() {} },
     'lib/moysklad/logs': { writeMoyskladLog: async () => {} },
+    'lib/supabase/admin': { createAdminClient: () => { throw new Error('Unexpected Supabase access') } },
     'lib/utils/constants': { DELIVERY_METHOD_LABELS: {} },
     'lib/db': { dbQuery: async () => { throw new Error('Unexpected SQL mutation') }, getPool: () => ({ connect: async () => {
       if (!dbConnection) throw new Error('Unexpected database connection')
@@ -64,7 +65,7 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
       if (Object.hasOwn(mocks, target)) return mocks[target]
       if (['crypto', 'node:crypto'].includes(target)) return require('node:crypto')
       if (target === 'node:util') return require('node:util')
-      if (['lib/moysklad/client', 'lib/moysklad/sync', 'lib/moysklad/bundles', 'lib/moysklad/order-totals', 'lib/moysklad/order-link-repair', 'lib/moysklad/order-hash', 'lib/moysklad/order-link-service', 'lib/moysklad/order-link-endpoint', 'payload/access/adminRoles'].includes(target)) return load(target)
+      if (['lib/moysklad/client', 'lib/moysklad/sync', 'lib/moysklad/bundles', 'lib/moysklad/order-totals', 'lib/moysklad/order-link-repair', 'lib/moysklad/order-hash', 'lib/moysklad/order-link-service', 'lib/moysklad/order-link-endpoint', 'lib/moysklad/order-retry', 'lib/discounts', 'lib/product-types', 'payload/access/adminRoles'].includes(target)) return load(target)
       throw new Error(`Unexpected dependency: ${id}`)
     }
     vm.runInNewContext(`(function(require,module,exports){${compiled.get(file)}\n})`, {
@@ -86,6 +87,90 @@ function fixture({ respond, config: overrides = {}, signalAPI = AbortSignal, onD
 
 const unavailable = () => new Response('<html>unavailable</html>', { status: 503 })
 const writes = (f, entity) => f.calls.filter(c => c.path === `entity/${entity}` && c.method === 'POST')
+
+function retryFixture(orders, respond) {
+  const f = fixture({ respond }), events = []
+  f.payload.find = async ({ collection }) => {
+    if (collection === 'orders') return { docs: orders, totalPages: 1 }
+    if (collection === 'products') return { docs: [{ id: 'product', name: 'Coffee', moyskladId: 'product',
+      variants: [{ id: 'variant', name: '250g', moyskladId: 'variant', moyskladType: 'variant', price: 500 }] }] }
+    throw new Error(`Unexpected collection: ${collection}`)
+  }
+  return { ...f, events, run: options => f.load('lib/moysklad/order-retry').retryFailedMoyskladOrders(f.payload, {
+    includeAllUnexported: true, includeExisting: true, minAgeMs: 0,
+    onProgress: event => events.push(event), ...options,
+  }) }
+}
+
+const historicalOrder = () => ({ id: 160, orderId: '10C-00179', moyskladSyncStatus: 'error',
+  moyskladSyncError: 'conflict 3006', total: 19192, paymentStatus: 'pending', items: [] })
+const retryOrder = (id, orderId) => ({ id, orderId, moyskladSyncStatus: 'error', customerType: 'business',
+  subtotal: 500, total: 500, client: { moyskladCounterpartyId: 'counterparty' },
+  items: [{ id: 'line', productName: 'Coffee', variantName: '250g', unitPrice: 500, quantity: 1 }] })
+
+for (const [label, options] of [
+  ['full retry', {}], ['selection', { orderIds: [160] }],
+  ['forced selection', { orderIds: [160], forceSelected: true }],
+  ['background retry', { includeAllUnexported: false, includeExisting: false }],
+]) {
+  test(`historical 10C-00179 is explicitly skipped without network or order writes in ${label}`, async () => {
+    const order = historicalOrder(), before = structuredClone(order), f = retryFixture([order])
+    const result = await f.run(options)
+    assert.equal(result.failed, 0)
+    assert.equal(result.succeeded, 0)
+    assert.equal(result.synced, 0)
+    assert.equal(result.skippedTotal, 1)
+    assert.equal(result.retryable, 0)
+    assert.equal(result.excludedOrders[0].orderId, '10C-00179')
+    assert.match(result.excludedOrders[0].reason, /старый заказ/)
+    assert.equal(result.retried.length, 0)
+    assert.equal(f.calls.length, 0)
+    assert.equal(f.updates.length, 0)
+    assert.deepEqual(order, before)
+    assert.ok(f.events.some(e => /10C-00179: пропущен/.test(e.message)))
+    assert.match(f.events.at(-1).message, /отправлено 0, пропущено 1, ошибок 0/)
+  })
+}
+
+test('bulk retry skips the exception, still exports another order and counts unchanged orders separately', async () => {
+  const excluded = historicalOrder(), pending = retryOrder(161, 'TEST-NEW'), unchanged = retryOrder(162, 'TEST-SYNCED')
+  const f = retryFixture([excluded, pending, unchanged], call => {
+    if (call.method === 'GET' && call.path.startsWith('entity/customerorder?')
+      && new URLSearchParams(call.path.split('?')[1]).get('filter')?.startsWith('organization=')) {
+      return Response.json({ rows: [{ id: 'synced-remote', name: unchanged.orderId, externalCode: String(unchanged.id) }] })
+    }
+    if (call.method === 'POST' && call.path === 'entity/customerorder') return Response.json({ id: 'new-remote', sum: 50000 })
+  })
+  unchanged.moyskladSyncedHash = f.load('lib/moysklad/order-hash').computeOrderContentHash(unchanged)
+  const result = await f.run()
+  assert.equal(result.checked, 3)
+  assert.equal(result.synced, 1)
+  assert.equal(result.succeeded, 1, JSON.stringify(result.retried))
+  assert.equal(result.failed, 0)
+  assert.equal(result.skippedTotal, 2)
+  assert.equal(result.skipped, 1)
+  assert.equal(result.excludedOrders.length, 1)
+  assert.ok(f.updates.length > 0)
+  assert.ok(f.updates.every(u => u.id === pending.id))
+  assert.equal(writes(f, 'customerorder').length, 1)
+  assert.equal(JSON.parse(writes(f, 'customerorder')[0].init.body).name, 'TEST-NEW')
+})
+
+for (const [id, number] of [[161, '10C-00179'], [160, 'TEST-OTHER'], [343, '10C-00376']]) {
+  test(`uniqueness error remains a failure for non-excluded identity ${id}/${number}`, async () => {
+    const order = retryOrder(id, number), f = retryFixture([order], call => {
+      if (call.method === 'POST' && call.path === 'entity/customerorder') {
+        return Response.json({ errors: [{ code: 3006, error: 'unique name conflict' }] }, { status: 412 })
+      }
+    })
+    const result = await f.run()
+    assert.equal(result.excludedOrders.length, 0)
+    assert.equal(result.skippedTotal, 0)
+    assert.equal(result.failed, 1)
+    assert.match(result.retried[0].error, /3006/)
+    assert.ok(f.updates.some(u => u.data.moyskladSyncStatus === 'error'))
+  })
+}
 
 function repairFixture() {
   const order = { order_id: 'TEST-179', total: 19192, subtotal: 23990, discount_amount: 4798,

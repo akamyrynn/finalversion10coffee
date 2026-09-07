@@ -21,10 +21,13 @@ interface FinalResult {
   error?: string
   checked?: number
   retryable?: number
+  synced?: number
   due?: number
   succeeded?: number
   failed?: number
   trashedSkipped?: number
+  skippedTotal?: number
+  excludedOrders?: { id: string | number; orderId?: string; reason: string }[]
   retried?: RetryOrderResult[]
 }
 
@@ -253,15 +256,15 @@ export default function MoyskladOrderRetryButton() {
         >
           {final.ok ? (
             <span>
-              Готово: проверено {final.checked || 0}, к выгрузке {final.retryable || 0}, отправлено{" "}
-              {final.succeeded || 0}, пропущено {final.trashedSkipped || 0}, ошибок {final.failed || 0}.
+              Готово: проверено {final.checked || 0}, к выгрузке {final.synced ?? final.retryable ?? 0}, отправлено{" "}
+              {final.succeeded || 0}, пропущено {final.skippedTotal ?? final.trashedSkipped ?? 0}, ошибок {final.failed || 0}.
             </span>
           ) : (
             <div>
               <div>{final.error || "Повторная синхронизация завершилась с ошибками"}</div>
               <div style={{ marginTop: "6px" }}>
-                Проверено {final.checked || 0}, к выгрузке {final.retryable || 0}, отправлено {final.succeeded || 0},
-                пропущено {final.trashedSkipped || 0}, ошибок {final.failed || 0}.
+                Проверено {final.checked || 0}, к выгрузке {final.synced ?? final.retryable ?? 0}, отправлено {final.succeeded || 0},
+                пропущено {final.skippedTotal ?? final.trashedSkipped ?? 0}, ошибок {final.failed || 0}.
               </div>
               {failedOrders.length > 0 && (
                 <ul style={{ margin: "8px 0 0", paddingLeft: "18px" }}>
@@ -274,6 +277,11 @@ export default function MoyskladOrderRetryButton() {
               )}
             </div>
           )}
+          {final.excludedOrders?.map((order) => (
+            <div key={String(order.id)} style={{ marginTop: "6px" }}>
+              {order.orderId || order.id}: пропущен — {order.reason}.
+            </div>
+          ))}
         </div>
       )}
     </div>
